@@ -32,6 +32,10 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// Hibernate Tools 및 JPA Reverse Engineering 관련 추가 의존성
+//	implementation 'org.hibernate:hibernate-core:5.6.0.Final'
+//	implementation 'org.hibernate:hibernate-tools:5.6.0.Final'
 }
 
 tasks.named('test') {
