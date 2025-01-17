@@ -1,0 +1,19 @@
+<!--<!DOCTYPE hibernate-reverse-engineering PUBLIC-->
+<!--        "-//Hibernate/Hibernate Reverse Engineering DTD 3.0//EN"-->
+<!--        "http://hibernate.sourceforge.net/hibernate-reverse-engineering-3.0.dtd">-->
+
+<!--<hibernate-reverse-engineering>-->
+<!--    <table-filter match-name="user" />-->
+<!--    <table-filter match-name="category" />-->
+<!--    <table-filter match-name="my_recipe" />-->
+
+<!--    <table schema="your_schema" name="user">-->
+<!--        <class name="User" package="com.project.user" />-->
+<!--    </table>-->
+<!--    <table schema="your_schema" name="product">-->
+<!--        <class name="Product" package="com.project.product" />-->
+<!--    </table>-->
+<!--    <table schema="your_schema" name="order">-->
+<!--        <class name="Order" package="com.project.order" />-->
+<!--    </table>-->
+<!--</hibernate-reverse-engineering>-->
