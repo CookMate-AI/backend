@@ -19,4 +19,8 @@ public class UserCheckService {
     public boolean duplicationEmail(String email){
         return userRepository.existsByEmail(email);
     }
+
+    public boolean duplicationNickName(String nickName){
+        return userRepository.existsByNickName(nickName);
+    }
 }

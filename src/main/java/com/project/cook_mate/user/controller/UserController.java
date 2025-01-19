@@ -40,4 +40,15 @@ public class UserController {
         }
     }
 
+    @GetMapping("/check-Nname")
+    public ResponseEntity<?> checkNickName(@RequestParam(name = "nickName") String nickName){
+        boolean isExist = userCheckService.duplicationNickName(nickName);
+
+        if(isExist){
+            return ResponseEntity.ok(Map.of("message", "해당 닉네임이 이미 존재합니다", "isExist", true));
+        }else{
+            return ResponseEntity.ok(Map.of("message", "해당 닉네임은 사용가능합니다", "isExist", false));
+        }
+    }
+
 }
