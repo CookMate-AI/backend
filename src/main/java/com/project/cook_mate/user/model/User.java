@@ -40,6 +40,6 @@ public class User {
     @Column(name = "updatedate")
     private LocalDateTime updateDate;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Recipe> recipes;
 }
