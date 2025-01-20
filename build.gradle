@@ -34,6 +34,9 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
 
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+
 //	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
 	// Hibernate Tools 및 JPA Reverse Engineering 관련 추가 의존성

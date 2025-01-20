@@ -36,7 +36,21 @@ public class UserController {
 
             mailService.sendEmail(email);
 
-            return ResponseEntity.ok(Map.of("message", "보내신 이메일 주소로 인증번호가 발송되었습니다."));
+            return ResponseEntity.ok(Map.of("message", "보내신 이메일 주소로 인증번호가 발송되었습니다.", "isExist", false));
+        }
+    }
+
+    @PostMapping("/check-Email/certification")
+    public ResponseEntity<?> checkCertificationNumber(@RequestPart("email") String email, @RequestPart("code") String code){
+        int check = mailService.checkEmail(email, code);
+
+        if(check == 0){
+            return ResponseEntity.ok(Map.of("message", "인증번호가 만료되었습니다.", "checkNum", 0));
+        }else if(check ==1){
+            mailService.deleteAuthCode(email);
+            return ResponseEntity.ok(Map.of("message", "인증번호가 인증성공", "checkNum", 1));
+        }else{
+            return ResponseEntity.ok(Map.of("message", "인증번호가 일치하지 않습니다.", "checkNum", 2));
         }
     }
 
