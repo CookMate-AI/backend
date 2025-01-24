@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Entity
@@ -42,4 +43,9 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Recipe> recipes;
+
+    @PrePersist
+    protected void onCreate(){
+        this.joinDate = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+    }
 }

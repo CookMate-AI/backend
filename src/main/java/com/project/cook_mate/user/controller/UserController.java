@@ -1,8 +1,11 @@
 package com.project.cook_mate.user.controller;
 
+import com.project.cook_mate.user.dto.UserDto;
 import com.project.cook_mate.user.service.MailService;
 import com.project.cook_mate.user.service.UserCheckService;
+import com.project.cook_mate.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +17,7 @@ import java.util.Map;
 public class UserController {
     private final UserCheckService userCheckService;
     private final MailService mailService;
+    private final UserService userService;
 
     @GetMapping("/check-id")
     public ResponseEntity<?> checkId(@RequestParam(name = "userId") String userId){
@@ -63,6 +67,29 @@ public class UserController {
         }else{
             return ResponseEntity.ok(Map.of("message", "해당 닉네임은 사용가능합니다", "isExist", false));
         }
+    }
+
+    @PostMapping("/signup")
+    public ResponseEntity<?> signup(@RequestBody UserDto userDto){
+        boolean result = userService.signUp(userDto);
+
+        try {
+            if (result) {
+                return ResponseEntity.status(HttpStatus.CREATED) // 201 Created
+                        .body("회원가입이 성공적으로 완료되었습니다.");
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("회원가입에 실패했습니다.");
+        }catch (IllegalArgumentException e) {
+            // 유효성 검사 실패 시 (예: 중복된 아이디나 이메일)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST) // 400 Bad Request
+                    .body(e.getMessage());
+        } catch (RuntimeException e) {
+            // 서버 측 문제 발생 시
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR) // 500 Internal Server Error
+                    .body("서버 오류가 발생했습니다. 다시 시도해주세요.");
+        }
+
     }
 
 }
