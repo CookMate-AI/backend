@@ -76,7 +76,11 @@ public class MailService {
 
     // 인증 코드 저장
     public void saveAuthCode(String email, String code) {
-        redisTemplate.opsForValue().set("auth:" + email, code, 310, TimeUnit.SECONDS); //5분 인증시간 -> 10초는 저장하고 보내는 동안의 딜레이 시간 고려
+        String key = "auth:" + email;
+//        if(Boolean.TRUE.equals(redisTemplate.hasKey(key))) //없어도 자동 덮어씌우기 가능(다만 로그나 디버깅 측면에서 이부분을 사용가능 함)
+//            deleteAuthCode(email);
+
+        redisTemplate.opsForValue().set(key, code, 3100, TimeUnit.SECONDS); //5분 인증시간 -> 10초는 저장하고 보내는 동안의 딜레이 시간 고려
     }
 
     // 인증 코드 가져오기

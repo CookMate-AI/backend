@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Entity
@@ -21,13 +22,13 @@ public class User {
     @Column(name = "user_id", length = 20, nullable = false)
     private String userId;
 
-    @Column(name = "user_pw", nullable = false)
+    @Column(name = "user_pw", length = 100, nullable = false)
     private String userPw;
 
-    @Column(name = "nickname", nullable = false)
+    @Column(name = "nickname", length = 30, nullable = false)
     private String nickName;
 
-    @Column(name = "email", nullable = false)
+    @Column(name = "email", length = 50, nullable = false)
     private String email;
 
     @Builder.Default
@@ -42,4 +43,9 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Recipe> recipes;
+
+    @PrePersist
+    protected void onCreate(){
+        this.joinDate = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+    }
 }
