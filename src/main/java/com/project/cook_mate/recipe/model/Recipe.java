@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "recipe")
+@Table(name = "my_recipe")
 @Builder
 public class Recipe {
 

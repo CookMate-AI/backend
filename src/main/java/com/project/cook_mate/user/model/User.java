@@ -22,13 +22,13 @@ public class User {
     @Column(name = "user_id", length = 20, nullable = false)
     private String userId;
 
-    @Column(name = "user_pw", nullable = false)
+    @Column(name = "user_pw", length = 100, nullable = false)
     private String userPw;
 
-    @Column(name = "nickname", nullable = false)
+    @Column(name = "nickname", length = 30, nullable = false)
     private String nickName;
 
-    @Column(name = "email", nullable = false)
+    @Column(name = "email", length = 50, nullable = false)
     private String email;
 
     @Builder.Default

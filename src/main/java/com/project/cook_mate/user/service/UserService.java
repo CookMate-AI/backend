@@ -38,6 +38,7 @@ public class UserService {
             userRepository.save(user);
             return true;  // 성공적으로 가입 처리됨
         } catch (Exception e) {
+            System.out.println(e.getMessage());
             throw new RuntimeException("회원가입 처리 중 오류가 발생했습니다.");
         }
 
