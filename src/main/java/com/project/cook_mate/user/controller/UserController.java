@@ -19,6 +19,12 @@ public class UserController {
     private final MailService mailService;
     private final UserService userService;
 
+    @GetMapping("/test")
+    public ResponseEntity<?> test(){
+        System.out.println("test메서드 들어옴");
+        return ResponseEntity.ok(Map.of("message", "인증성공"));
+    }
+
     @GetMapping("/check-id")
     public ResponseEntity<?> checkId(@RequestParam(name = "userId") String userId){
         boolean isExist = userCheckService.duplicationId(userId);

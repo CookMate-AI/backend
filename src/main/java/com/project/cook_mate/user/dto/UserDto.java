@@ -29,6 +29,7 @@ public class UserDto {
                 .userPw(pw)
                 .nickName(nickName)
                 .email(this.email)
+                .role("user")
                 .build();
 
     }
