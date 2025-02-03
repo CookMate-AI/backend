@@ -41,6 +41,9 @@ public class User {
     @Column(name = "updatedate")
     private LocalDateTime updateDate;
 
+    @Column(name = "role")
+    private String role;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Recipe> recipes;
 
