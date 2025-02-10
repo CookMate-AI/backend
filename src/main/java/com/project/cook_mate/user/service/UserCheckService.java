@@ -1,5 +1,6 @@
 package com.project.cook_mate.user.service;
 
+import com.project.cook_mate.user.dto.UserDto;
 import com.project.cook_mate.user.model.User;
 import com.project.cook_mate.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,4 +24,10 @@ public class UserCheckService {
     public boolean duplicationNickName(String nickName){
         return userRepository.existsByNickName(nickName);
     }
+
+    public String returnId(String email){
+        Optional<UserDto> user = userRepository.findUserDtoByUserEmail(email);
+        return user.get().getUserId();
+    }
+
 }
