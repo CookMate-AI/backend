@@ -1,7 +1,12 @@
 package com.project.cook_mate.user.repository;
 
+import com.project.cook_mate.user.dto.UserDto;
 import com.project.cook_mate.user.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, String> {
     boolean existsByEmail(String email);
@@ -9,4 +14,7 @@ public interface UserRepository extends JpaRepository<User, String> {
     boolean existsByNickName(String nickName);
 
     User findByuserId(String userId);
+
+    @Query("SELECT NEW com.project.cook_mate.user.dto.UserDto(u.userId, u.userPw, u.email) FROM User u WHERE u.email = :email")
+    Optional<UserDto> findUserDtoByUserEmail(@Param("email") String email);
 }

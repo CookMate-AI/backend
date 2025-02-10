@@ -20,6 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 @Configuration
@@ -56,7 +57,7 @@ public class SecurityConfig {
                             public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                                 CorsConfiguration configuration = new CorsConfiguration();
 
-                                configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
+                                configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173")); // 경로 추가시 해당 경로 뒤에 , 하고 붙이면 가능
                                 configuration.setAllowedMethods(Collections.singletonList("*")); //get, post등 모든 메서드 허용
                                 configuration.setAllowCredentials(true);
                                 configuration.setAllowedHeaders(Collections.singletonList("*")); //허용할 헤더
@@ -82,18 +83,20 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/users/find-id/send-Email").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users/find-id/certification").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users/find-pw").permitAll()
+
                         .requestMatchers(HttpMethod.GET, "/users/test").hasAuthority("user")
+
                         .anyRequest().authenticated()
                 )
 
                 .formLogin(form -> form.disable()) // Form Login 비활성화
                 .httpBasic(httpBasic -> httpBasic.disable()); // Basic Auth 비활성화
-        http
-                .addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);
 
         http
                 .addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class);
 
+        http
+                .addFilterAfter(new JWTFilter(jwtUtil), LoginFilter.class);
         //세션설정
         http
                 .sessionManagement((session) -> session

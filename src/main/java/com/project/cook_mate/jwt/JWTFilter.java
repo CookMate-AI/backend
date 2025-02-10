@@ -22,6 +22,17 @@ public class JWTFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        String requestURI = request.getRequestURI();
+        if (requestURI.equals("/users/signup") || requestURI.equals("/users/check-id/**") ||
+                        requestURI.equals("/users/check-Email/send-Email") || requestURI.equals("/users/check-Email/certification") ||
+                        requestURI.equals("/users/check-Nname/**") || requestURI.equals("/users/signin") ||
+                        requestURI.equals("/users/find-id/send-Email") || requestURI.equals("/users/find-id/certification") ||
+                        requestURI.equals("/users/find-pw")
+        ) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         //request에서 헤더를 가져오고
         String authorization = request.getHeader("Authorization");
 
@@ -29,11 +40,11 @@ public class JWTFilter extends OncePerRequestFilter {
         if(authorization == null || !authorization.startsWith("Bearer ")){
             System.out.println("token null");
 
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
             response.getWriter().write("{\"error\": \"토큰없음\"}");
 
-            filterChain.doFilter(request, response);
+//            filterChain.doFilter(request, response);
 
             //토큰이 없는 경우이기에 filterchain을 끊고 메서드 종료
             return;
@@ -52,10 +63,10 @@ public class JWTFilter extends OncePerRequestFilter {
         //토큰 유효시간 검증
         if(jwtUtil.isExpired(token)){
             System.out.println("token expired");
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
             response.getWriter().write("{\"error\": \"Token expired\"}");
-            filterChain.doFilter(request, response);
+//            filterChain.doFilter(request, response);
             return;
         }
 
@@ -66,6 +77,8 @@ public class JWTFilter extends OncePerRequestFilter {
         user.setUserId(userId);
         user.setUserPw("temppassword"); //매번 db로 확인하면 효율적으로 문제가 생겨 임의로 지정
         user.setRole(role);
+
+        System.out.println("로그인 후 토큰인증 가능");
 
         CustomUserDetails customUserDetails = new CustomUserDetails(user);
 

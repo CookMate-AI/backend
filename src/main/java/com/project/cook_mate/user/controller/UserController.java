@@ -98,4 +98,33 @@ public class UserController {
 
     }
 
+    @PostMapping("/find-id/send-Email")
+    public ResponseEntity<?> findId(@RequestPart("email") String email){
+        boolean isExist = userCheckService.duplicationEmail(email);
+
+        if(isExist){
+            mailService.sendEmail(email);
+            return ResponseEntity.ok(Map.of("message", "해당 Email주소로 전송이 완료 되었습니다."));
+        }else{
+
+            return ResponseEntity.ok(Map.of("message", "해당 Email은 가입한 이력이 없습니다."));
+        }
+    }
+
+    @PostMapping("/find-id/certification")
+    public ResponseEntity<?> checkFindIdCertificationNumber(@RequestPart("email") String email, @RequestPart("code") String code){
+        int check = mailService.checkEmail(email, code);
+
+        if(check == 0){
+            return ResponseEntity.ok(Map.of("message", "인증번호가 만료되었습니다.", "checkNum", 0));
+        }else if(check ==1){
+            String id = userCheckService.returnId(email);
+            return ResponseEntity.ok(Map.of("message", "인증번호가 인증성공", "ID", id));
+        }else{
+            return ResponseEntity.ok(Map.of("message", "인증번호가 일치하지 않습니다.", "checkNum", 2));
+        }
+    }
+
+
+
 }
