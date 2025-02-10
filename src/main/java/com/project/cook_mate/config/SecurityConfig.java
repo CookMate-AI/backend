@@ -3,6 +3,7 @@ package com.project.cook_mate.config;
 import com.project.cook_mate.jwt.JWTFilter;
 import com.project.cook_mate.jwt.JWTUtil;
 import com.project.cook_mate.jwt.LoginFilter;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,6 +17,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+
+import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
@@ -43,6 +48,25 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         LoginFilter loginFilter = new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil);
         loginFilter.setFilterProcessesUrl("/users/signin");
+
+        http
+                .cors((cors) -> cors
+                        .configurationSource(new CorsConfigurationSource() {
+                            @Override
+                            public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
+                                CorsConfiguration configuration = new CorsConfiguration();
+
+                                configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
+                                configuration.setAllowedMethods(Collections.singletonList("*")); //get, post등 모든 메서드 허용
+                                configuration.setAllowCredentials(true);
+                                configuration.setAllowedHeaders(Collections.singletonList("*")); //허용할 헤더
+                                configuration.setMaxAge(3600L); //허용을 유지할 시간
+
+                                configuration.setExposedHeaders(Collections.singletonList("Authorization")); //Authorization헤더 허용
+
+                                return configuration;
+                            }
+                        }));
 
         http
                 .csrf(csrf -> csrf.disable()) // CSRF 보호 비활성화 - jwt 토큰이기에 세션을 stateless 상태로 관리
