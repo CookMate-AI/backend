@@ -29,11 +29,11 @@ public class MailService {
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
             helper.setFrom("CookMate@cookmate.com"); // service name
             helper.setTo(Email); // customer email
-            if(num == 1) {
+            if(num == 1) { // 이메일 인증번호
                 helper.setSubject("CookMate에서 발송된 인증번호입니다."); // email title
                 helper.setText(generateContent(Email), true); // content, html: true
             }
-            else if(num == 2) {
+            else if(num == 2) { // 비밀번호 변경 메일
                 helper.setSubject("변경된 비밀번호입니다."); // email title
                 helper.setText(generateContent2(Email, detail), true); // content, html: true
             }
