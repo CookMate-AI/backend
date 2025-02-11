@@ -44,7 +44,7 @@ public class UserController {
             return ResponseEntity.ok(Map.of("message", "해당 Email이 이미 존재합니다.", "isExist", true));
         }else{
 
-            mailService.sendEmail(email);
+            mailService.sendEmail(email, 1, "");
 
             return ResponseEntity.ok(Map.of("message", "보내신 이메일 주소로 인증번호가 발송되었습니다.", "isExist", false));
         }
@@ -103,7 +103,7 @@ public class UserController {
         boolean isExist = userCheckService.duplicationEmail(email);
 
         if(isExist){
-            mailService.sendEmail(email);
+            mailService.sendEmail(email, 1, "");
             return ResponseEntity.ok(Map.of("message", "해당 Email주소로 전송이 완료 되었습니다."));
         }else{
 
@@ -122,6 +122,19 @@ public class UserController {
             return ResponseEntity.ok(Map.of("message", "인증번호가 인증성공", "ID", id));
         }else{
             return ResponseEntity.ok(Map.of("message", "인증번호가 일치하지 않습니다.", "checkNum", 2));
+        }
+    }
+
+    @PostMapping("/find-pw")
+    public ResponseEntity<?> checkFindPw(@RequestPart("userId") String userId, @RequestPart("email") String email){
+        String result = userService.changePw(userId,email);
+
+        if(result.equals("X")){
+            return ResponseEntity.ok(Map.of("message", "Id 와 email이 일치하지 않습니다"));
+        }else{
+            System.out.println(result);
+            mailService.sendEmail(email, 2, result);
+            return ResponseEntity.ok(Map.of("message", "이메일로 변경된 비밀번호가 발송되었습니다. 반드시 비밀번호를 변경해주세요."));
         }
     }
 

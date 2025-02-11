@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.Random;
 
 
@@ -16,6 +17,7 @@ public class UserService {
     private final PasswordEncoder bCryptPasswordEncoder;
     private final UserRepository userRepository;
     private final UserCheckService userCheckService;
+    private final PasswordGenerator passwordGenerator;
 
     public boolean signUp(UserDto userDto){
 
@@ -59,5 +61,22 @@ public class UserService {
         sb.append(number);
 
         return sb.toString();
+    }
+
+    public String changePw(String userId, String email){
+        Optional<User> optionalUser = userRepository.findByuserIdAndEmail(userId,email);
+
+        if(optionalUser.isPresent()){
+            User user = optionalUser.get();
+            String pw = passwordGenerator.generateRandomPassword();
+            String encodePw = bCryptPasswordEncoder.encode(pw);
+            user.setUserPw(encodePw);
+            userRepository.save(user);
+            return pw; //바뀐 pw 리턴
+        }else{
+            return "X";
+        }
+
+
     }
 }
