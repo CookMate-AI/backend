@@ -1,15 +1,19 @@
 package com.project.cook_mate.user.controller;
 
+import com.project.cook_mate.user.dto.CustomUserDetails;
 import com.project.cook_mate.user.dto.UserDto;
+import com.project.cook_mate.user.dto.UserResponseDto;
 import com.project.cook_mate.user.service.MailService;
 import com.project.cook_mate.user.service.UserCheckService;
 import com.project.cook_mate.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -138,6 +142,16 @@ public class UserController {
         }
     }
 
+    @GetMapping("/info")
+    public ResponseEntity<?> loadInformation(@AuthenticationPrincipal CustomUserDetails customUserDetails){
+        Optional<UserResponseDto> user = userService.loadPersonalInfo(customUserDetails.getUsername());
+
+        if(user.isPresent()){
+            return ResponseEntity.ok(user);
+        }else{
+            return ResponseEntity.ok(Map.of("message", "개인정보를 불러오지 못함"));
+        }
+    }
 
 
 }

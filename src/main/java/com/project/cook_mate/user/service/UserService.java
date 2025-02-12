@@ -1,6 +1,7 @@
 package com.project.cook_mate.user.service;
 
 import com.project.cook_mate.user.dto.UserDto;
+import com.project.cook_mate.user.dto.UserResponseDto;
 import com.project.cook_mate.user.model.User;
 import com.project.cook_mate.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -79,4 +80,11 @@ public class UserService {
 
 
     }
+
+    public Optional<UserResponseDto> loadPersonalInfo(String userId){
+        Optional<UserResponseDto> userResponseDto = userRepository.findUserByUserId(userId, 0);
+        return userResponseDto;
+
+    }
+
 }

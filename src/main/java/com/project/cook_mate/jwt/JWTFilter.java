@@ -42,7 +42,7 @@ public class JWTFilter extends OncePerRequestFilter {
 
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"토큰없음\"}");
+            response.getWriter().write("{\"error\": \"no Token\"}");
 
 //            filterChain.doFilter(request, response);
 
@@ -77,8 +77,6 @@ public class JWTFilter extends OncePerRequestFilter {
         user.setUserId(userId);
         user.setUserPw("temppassword"); //매번 db로 확인하면 효율적으로 문제가 생겨 임의로 지정
         user.setRole(role);
-
-        System.out.println("로그인 후 토큰인증 가능");
 
         CustomUserDetails customUserDetails = new CustomUserDetails(user);
 
