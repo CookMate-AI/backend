@@ -89,22 +89,27 @@ public class UserService {
 
     }
 
-    public ResponseEntity changePersonalInfo(String userId, String userPw, String nickName, String num){
+    public ResponseEntity changePersonalInfo(String userId, Map<String, Object> requestData){
         Optional<User> optionalUser = userRepository.findById(userId);
 
         if (optionalUser.isEmpty()){
             return ResponseEntity.badRequest().body(Map.of("message", "해당하는 개인정보 없음"));
         }
         User user = optionalUser.get();
+        int num = (Integer) requestData.get("num");
 
-        if(num.equals("1")){
+        if(num==1){
+            String nickName = (String) requestData.get("nickName");
             user.setNickName(nickName);
             userRepository.save(user);
-        } else if (num.equals("2")) {
+        } else if (num==2) {
+            String userPw = (String) requestData.get("userPw");
             String encodePw = bCryptPasswordEncoder.encode(userPw);
             user.setUserPw(encodePw);
             userRepository.save(user);
-        }else if (num.equals("3")) {
+        }else if (num==3) {
+            String nickName = (String) requestData.get("nickName");
+            String userPw = (String) requestData.get("userPw");
             user.setNickName(nickName);
             String encodePw = bCryptPasswordEncoder.encode(userPw);
             user.setUserPw(encodePw);

@@ -85,7 +85,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/users/find-pw").permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/users/test").hasAuthority("user") //없어도 anyRequest로 인하여 인증 절차 거침
-                        .requestMatchers(HttpMethod.PUT, "/users/info").hasAuthority("user")
 
                         .anyRequest().authenticated()
                 )
