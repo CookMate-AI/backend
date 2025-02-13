@@ -22,15 +22,21 @@ public class MailService {
     private final RedisTemplate<String, String> redisTemplate;
 
 
-    public void sendEmail(String Email) {
+    public void sendEmail(String Email, int num, String detail) {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
 
         try {
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
             helper.setFrom("CookMate@cookmate.com"); // service name
             helper.setTo(Email); // customer email
-            helper.setSubject("CookMate에서 발송된 인증번호입니다."); // email title
-            helper.setText(generateContent(Email),true); // content, html: true
+            if(num == 1) { // 이메일 인증번호
+                helper.setSubject("CookMate에서 발송된 인증번호입니다."); // email title
+                helper.setText(generateContent(Email), true); // content, html: true
+            }
+            else if(num == 2) { // 비밀번호 변경 메일
+                helper.setSubject("변경된 비밀번호입니다."); // email title
+                helper.setText(generateContent2(Email, detail), true); // content, html: true
+            }
             javaMailSender.send(mimeMessage);
         } catch (MessagingException e) {
             e.printStackTrace(); // 에러 출력
@@ -57,6 +63,14 @@ public class MailService {
         String content =
                 "<h1 style='font-size: 20px;'>CookMate 인증번호</h1>" +
                         "<p style='font-size: 16px;'>발송된 인증번호: <strong>" + num + "</strong></p>";
+        return content;
+    }
+
+    public String generateContent2(String Email, String detail){
+
+        String content =
+                "<h1 style='font-size: 20px;'>변경된 비밀번호입니다. 로그인 후 변경 부탁드립니다!!</h1>" +
+                        "<p style='font-size: 16px;'>비밀번호: <strong>" + detail + "</strong></p>";
         return content;
     }
 

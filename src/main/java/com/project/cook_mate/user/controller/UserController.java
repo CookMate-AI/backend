@@ -1,15 +1,19 @@
 package com.project.cook_mate.user.controller;
 
+import com.project.cook_mate.user.dto.CustomUserDetails;
 import com.project.cook_mate.user.dto.UserDto;
+import com.project.cook_mate.user.dto.UserResponseDto;
 import com.project.cook_mate.user.service.MailService;
 import com.project.cook_mate.user.service.UserCheckService;
 import com.project.cook_mate.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,7 +30,9 @@ public class UserController {
     }
 
     @GetMapping("/check-id")
-    public ResponseEntity<?> checkId(@RequestParam(name = "userId") String userId){
+    public ResponseEntity<?> checkId(@RequestBody Map<String, Object> requestData){
+        String userId = (String) requestData.get("userId");
+        System.out.println(userId);
         boolean isExist = userCheckService.duplicationId(userId);
 
         if(isExist){
@@ -37,21 +43,25 @@ public class UserController {
     }
 
     @PostMapping("/check-Email/send-Email")
-    public ResponseEntity<?> certificationNumber(@RequestPart("email") String email){
+    public ResponseEntity<?> certificationNumber(@RequestBody Map<String, Object> requestData){
+        String email = (String) requestData.get("email");
         boolean isExist = userCheckService.duplicationEmail(email);
 
         if(isExist){
             return ResponseEntity.ok(Map.of("message", "해당 Email이 이미 존재합니다.", "isExist", true));
         }else{
 
-            mailService.sendEmail(email);
+            mailService.sendEmail(email, 1, "");
 
             return ResponseEntity.ok(Map.of("message", "보내신 이메일 주소로 인증번호가 발송되었습니다.", "isExist", false));
         }
     }
 
     @PostMapping("/check-Email/certification")
-    public ResponseEntity<?> checkCertificationNumber(@RequestPart("email") String email, @RequestPart("code") String code){
+    public ResponseEntity<?> checkCertificationNumber(@RequestBody Map<String, Object> requestData){
+        String email = (String) requestData.get("email");
+        String code = (String) requestData.get("code");
+
         int check = mailService.checkEmail(email, code);
 
         if(check == 0){
@@ -65,7 +75,8 @@ public class UserController {
     }
 
     @GetMapping("/check-Nname")
-    public ResponseEntity<?> checkNickName(@RequestParam(name = "nickName") String nickName){
+    public ResponseEntity<?> checkNickName(@RequestBody Map<String, Object> requestData){
+        String nickName = (String) requestData.get("nickName");
         boolean isExist = userCheckService.duplicationNickName(nickName);
 
         if(isExist){
@@ -77,9 +88,8 @@ public class UserController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody UserDto userDto){
-        boolean result = userService.signUp(userDto);
-
         try {
+            boolean result = userService.signUp(userDto);
             if (result) {
                 return ResponseEntity.status(HttpStatus.CREATED) // 201 Created
                         .body("회원가입이 성공적으로 완료되었습니다.");
@@ -99,11 +109,12 @@ public class UserController {
     }
 
     @PostMapping("/find-id/send-Email")
-    public ResponseEntity<?> findId(@RequestPart("email") String email){
+    public ResponseEntity<?> findId(@RequestBody Map<String, Object> requestData){
+        String email = (String) requestData.get("email");
         boolean isExist = userCheckService.duplicationEmail(email);
 
         if(isExist){
-            mailService.sendEmail(email);
+            mailService.sendEmail(email, 1, "");
             return ResponseEntity.ok(Map.of("message", "해당 Email주소로 전송이 완료 되었습니다."));
         }else{
 
@@ -112,7 +123,10 @@ public class UserController {
     }
 
     @PostMapping("/find-id/certification")
-    public ResponseEntity<?> checkFindIdCertificationNumber(@RequestPart("email") String email, @RequestPart("code") String code){
+    public ResponseEntity<?> checkFindIdCertificationNumber(@RequestBody Map<String, Object> requestData){
+        String code = (String) requestData.get("code");
+        String email = (String) requestData.get("email");
+
         int check = mailService.checkEmail(email, code);
 
         if(check == 0){
@@ -121,10 +135,55 @@ public class UserController {
             String id = userCheckService.returnId(email);
             return ResponseEntity.ok(Map.of("message", "인증번호가 인증성공", "ID", id));
         }else{
-            return ResponseEntity.ok(Map.of("message", "인증번호가 일치하지 않습니다.", "checkNum", 2));
+            return ResponseEntity.ok(Map.of("message", "인증번호가 일치하지 않습니다.", "checkNum", 1));
         }
     }
 
+    @PostMapping("/find-pw")
+    public ResponseEntity<?> checkFindPw(@RequestBody Map<String, Object> requestData){
+        String userId = (String) requestData.get("userId");
+        String email = (String) requestData.get("email");
 
+        String result = userService.findPw(userId,email);
+
+        if(result.equals("X")){
+            return ResponseEntity.ok(Map.of("message", "Id 와 email이 일치하지 않습니다"));
+        }else{
+            System.out.println(result);
+            mailService.sendEmail(email, 2, result);
+            return ResponseEntity.ok(Map.of("message", "이메일로 변경된 비밀번호가 발송되었습니다. 반드시 비밀번호를 변경해주세요."));
+        }
+    }
+
+    @GetMapping("/info")
+    public ResponseEntity<?> loadInformation(@AuthenticationPrincipal CustomUserDetails customUserDetails){
+        Optional<UserResponseDto> user = userService.loadPersonalInfo(customUserDetails.getUsername());
+
+        if(user.isPresent()){
+            return ResponseEntity.ok(user);
+        }else{
+            return ResponseEntity.status(404).body(Map.of("message", "개인정보를 불러오지 못함"));
+        }
+    }
+
+//    @PutMapping("/info")
+//    public ResponseEntity<?> editInformation(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+//                                             @RequestPart("nickName") String nickName, @RequestPart("userPw") String userPw,
+//                                             @RequestPart("num") String num){
+//        System.out.println("wowowowowowowo");
+//        String id = customUserDetails.getUsername();
+//        ResponseEntity response = userService.changePersonalInfo(id, userPw, nickName, num);
+//
+//        return response;
+//    }
+
+    @PutMapping("/info")
+    public ResponseEntity<?> editInformation(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+                                             @RequestBody Map<String, Object> requestData){
+        String id = customUserDetails.getUsername();
+        ResponseEntity response = userService.changePersonalInfo(id, requestData);
+
+        return response;
+    }
 
 }

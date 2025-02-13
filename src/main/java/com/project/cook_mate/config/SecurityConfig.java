@@ -75,16 +75,16 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/users/signUp").permitAll() // 특정 경로 허용
                         .requestMatchers(HttpMethod.POST, "/users/signup").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/users/check-id/{user_id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/users/check-id").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users/check-Email/send-Email").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users/check-Email/certification").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/users/check-Nname/{nickName}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/users/check-Nname").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users/signin").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users/find-id/send-Email").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users/find-id/certification").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users/find-pw").permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/users/test").hasAuthority("user")
+                        .requestMatchers(HttpMethod.GET, "/users/test").hasAuthority("user") //없어도 anyRequest로 인하여 인증 절차 거침
 
                         .anyRequest().authenticated()
                 )

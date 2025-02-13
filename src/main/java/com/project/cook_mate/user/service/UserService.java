@@ -1,12 +1,16 @@
 package com.project.cook_mate.user.service;
 
 import com.project.cook_mate.user.dto.UserDto;
+import com.project.cook_mate.user.dto.UserResponseDto;
 import com.project.cook_mate.user.model.User;
 import com.project.cook_mate.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 
 
@@ -16,6 +20,7 @@ public class UserService {
     private final PasswordEncoder bCryptPasswordEncoder;
     private final UserRepository userRepository;
     private final UserCheckService userCheckService;
+    private final PasswordGenerator passwordGenerator;
 
     public boolean signUp(UserDto userDto){
 
@@ -60,4 +65,60 @@ public class UserService {
 
         return sb.toString();
     }
+
+    public String findPw(String userId, String email){
+        Optional<User> optionalUser = userRepository.findByuserIdAndEmail(userId,email);
+
+        if(optionalUser.isPresent()){
+            User user = optionalUser.get();
+            String pw = passwordGenerator.generateRandomPassword();
+            String encodePw = bCryptPasswordEncoder.encode(pw);
+            user.setUserPw(encodePw);
+            userRepository.save(user);
+            return pw; //바뀐 pw 리턴
+        }else{
+            return "X";
+        }
+
+
+    }
+
+    public Optional<UserResponseDto> loadPersonalInfo(String userId){
+        Optional<UserResponseDto> userResponseDto = userRepository.findUserByUserId(userId, 0);
+        return userResponseDto;
+
+    }
+
+    public ResponseEntity changePersonalInfo(String userId, Map<String, Object> requestData){
+        Optional<User> optionalUser = userRepository.findById(userId);
+
+        if (optionalUser.isEmpty()){
+            return ResponseEntity.badRequest().body(Map.of("message", "해당하는 개인정보 없음"));
+        }
+        User user = optionalUser.get();
+        int num = (Integer) requestData.get("num");
+
+        if(num==1){
+            String nickName = (String) requestData.get("nickName");
+            user.setNickName(nickName);
+            userRepository.save(user);
+        } else if (num==2) {
+            String userPw = (String) requestData.get("userPw");
+            String encodePw = bCryptPasswordEncoder.encode(userPw);
+            user.setUserPw(encodePw);
+            userRepository.save(user);
+        }else if (num==3) {
+            String nickName = (String) requestData.get("nickName");
+            String userPw = (String) requestData.get("userPw");
+            user.setNickName(nickName);
+            String encodePw = bCryptPasswordEncoder.encode(userPw);
+            user.setUserPw(encodePw);
+            userRepository.save(user);
+        }
+
+        return ResponseEntity.ok().build();
+
+
+    }
+
 }

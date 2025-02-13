@@ -28,7 +28,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String username = obtainUsername(request);
         String password = obtainPassword(request);
 
-        System.out.println(password);
+        // 이 부분에 id 기반 탈퇴했는지 확인 -> 해당 id는 탈퇴한 유저입니다 등 분기점 필요
 
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(username, password, null);
 

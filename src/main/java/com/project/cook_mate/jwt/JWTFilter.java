@@ -23,9 +23,9 @@ public class JWTFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String requestURI = request.getRequestURI();
-        if (requestURI.equals("/users/signup") || requestURI.equals("/users/check-id/**") ||
+        if (requestURI.equals("/users/signup") || requestURI.equals("/users/check-id") ||
                         requestURI.equals("/users/check-Email/send-Email") || requestURI.equals("/users/check-Email/certification") ||
-                        requestURI.equals("/users/check-Nname/**") || requestURI.equals("/users/signin") ||
+                        requestURI.equals("/users/check-Nname") || requestURI.equals("/users/signin") ||
                         requestURI.equals("/users/find-id/send-Email") || requestURI.equals("/users/find-id/certification") ||
                         requestURI.equals("/users/find-pw")
         ) {
@@ -42,7 +42,7 @@ public class JWTFilter extends OncePerRequestFilter {
 
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"토큰없음\"}");
+            response.getWriter().write("{\"error\": \"no Token\"}");
 
 //            filterChain.doFilter(request, response);
 
@@ -69,6 +69,7 @@ public class JWTFilter extends OncePerRequestFilter {
 //            filterChain.doFilter(request, response);
             return;
         }
+        System.out.println("토큰 이상X");
 
         String userId = jwtUtil.getUserId(token);
         String role = jwtUtil.getRole(token); //회원만 있기에 user 로 가져옴
@@ -78,8 +79,6 @@ public class JWTFilter extends OncePerRequestFilter {
         user.setUserPw("temppassword"); //매번 db로 확인하면 효율적으로 문제가 생겨 임의로 지정
         user.setRole(role);
 
-        System.out.println("로그인 후 토큰인증 가능");
-
         CustomUserDetails customUserDetails = new CustomUserDetails(user);
 
         //스프링 시큐리티 인증 토큰 생성
@@ -87,6 +86,7 @@ public class JWTFilter extends OncePerRequestFilter {
 
         //세션에 사용자 등록 - user세션 생성
         SecurityContextHolder.getContext().setAuthentication(authToken);
+        System.out.println("마무리 작업");
 
         filterChain.doFilter(request,response);
 
