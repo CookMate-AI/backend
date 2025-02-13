@@ -23,9 +23,9 @@ public class JWTFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String requestURI = request.getRequestURI();
-        if (requestURI.equals("/users/signup") || requestURI.equals("/users/check-id/**") ||
+        if (requestURI.equals("/users/signup") || requestURI.equals("/users/check-id") ||
                         requestURI.equals("/users/check-Email/send-Email") || requestURI.equals("/users/check-Email/certification") ||
-                        requestURI.equals("/users/check-Nname/**") || requestURI.equals("/users/signin") ||
+                        requestURI.equals("/users/check-Nname") || requestURI.equals("/users/signin") ||
                         requestURI.equals("/users/find-id/send-Email") || requestURI.equals("/users/find-id/certification") ||
                         requestURI.equals("/users/find-pw")
         ) {
@@ -69,6 +69,7 @@ public class JWTFilter extends OncePerRequestFilter {
 //            filterChain.doFilter(request, response);
             return;
         }
+        System.out.println("토큰 이상X");
 
         String userId = jwtUtil.getUserId(token);
         String role = jwtUtil.getRole(token); //회원만 있기에 user 로 가져옴
@@ -85,6 +86,7 @@ public class JWTFilter extends OncePerRequestFilter {
 
         //세션에 사용자 등록 - user세션 생성
         SecurityContextHolder.getContext().setAuthentication(authToken);
+        System.out.println("마무리 작업");
 
         filterChain.doFilter(request,response);
 

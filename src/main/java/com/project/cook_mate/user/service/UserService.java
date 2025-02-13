@@ -5,9 +5,11 @@ import com.project.cook_mate.user.dto.UserResponseDto;
 import com.project.cook_mate.user.model.User;
 import com.project.cook_mate.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 
@@ -64,7 +66,7 @@ public class UserService {
         return sb.toString();
     }
 
-    public String changePw(String userId, String email){
+    public String findPw(String userId, String email){
         Optional<User> optionalUser = userRepository.findByuserIdAndEmail(userId,email);
 
         if(optionalUser.isPresent()){
@@ -84,6 +86,33 @@ public class UserService {
     public Optional<UserResponseDto> loadPersonalInfo(String userId){
         Optional<UserResponseDto> userResponseDto = userRepository.findUserByUserId(userId, 0);
         return userResponseDto;
+
+    }
+
+    public ResponseEntity changePersonalInfo(String userId, String userPw, String nickName, String num){
+        Optional<User> optionalUser = userRepository.findById(userId);
+
+        if (optionalUser.isEmpty()){
+            return ResponseEntity.badRequest().body(Map.of("message", "해당하는 개인정보 없음"));
+        }
+        User user = optionalUser.get();
+
+        if(num.equals("1")){
+            user.setNickName(nickName);
+            userRepository.save(user);
+        } else if (num.equals("2")) {
+            String encodePw = bCryptPasswordEncoder.encode(userPw);
+            user.setUserPw(encodePw);
+            userRepository.save(user);
+        }else if (num.equals("3")) {
+            user.setNickName(nickName);
+            String encodePw = bCryptPasswordEncoder.encode(userPw);
+            user.setUserPw(encodePw);
+            userRepository.save(user);
+        }
+
+        return ResponseEntity.ok().build();
+
 
     }
 

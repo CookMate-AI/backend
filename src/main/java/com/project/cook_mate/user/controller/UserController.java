@@ -30,8 +30,10 @@ public class UserController {
     }
 
     @GetMapping("/check-id")
-    public ResponseEntity<?> checkId(@RequestParam(name = "userId") String userId){
+    public ResponseEntity<?> checkId(@RequestPart("userId") String userId){
+        System.out.println(userId);
         boolean isExist = userCheckService.duplicationId(userId);
+        System.out.println("go");
 
         if(isExist){
             return ResponseEntity.ok(Map.of("message", "해당 ID가 이미 존재합니다", "isExist", true));
@@ -69,7 +71,7 @@ public class UserController {
     }
 
     @GetMapping("/check-Nname")
-    public ResponseEntity<?> checkNickName(@RequestParam(name = "nickName") String nickName){
+    public ResponseEntity<?> checkNickName(@RequestPart("nickName") String nickName){
         boolean isExist = userCheckService.duplicationNickName(nickName);
 
         if(isExist){
@@ -81,9 +83,8 @@ public class UserController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody UserDto userDto){
-        boolean result = userService.signUp(userDto);
-
         try {
+            boolean result = userService.signUp(userDto);
             if (result) {
                 return ResponseEntity.status(HttpStatus.CREATED) // 201 Created
                         .body("회원가입이 성공적으로 완료되었습니다.");
@@ -131,7 +132,7 @@ public class UserController {
 
     @PostMapping("/find-pw")
     public ResponseEntity<?> checkFindPw(@RequestPart("userId") String userId, @RequestPart("email") String email){
-        String result = userService.changePw(userId,email);
+        String result = userService.findPw(userId,email);
 
         if(result.equals("X")){
             return ResponseEntity.ok(Map.of("message", "Id 와 email이 일치하지 않습니다"));
@@ -149,9 +150,21 @@ public class UserController {
         if(user.isPresent()){
             return ResponseEntity.ok(user);
         }else{
-            return ResponseEntity.ok(Map.of("message", "개인정보를 불러오지 못함"));
+            return ResponseEntity.status(404).body(Map.of("message", "개인정보를 불러오지 못함"));
         }
     }
+
+    @PutMapping("/info")
+    public ResponseEntity<?> editInformation(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+                                             @RequestPart("nickName") String nickName, @RequestPart("userPw") String userPw,
+                                             @RequestPart("num") String num){
+        System.out.println("wowowowowowowo");
+        String id = customUserDetails.getUsername();
+        ResponseEntity response = userService.changePersonalInfo(id, userPw, nickName, num);
+
+        return response;
+    }
+
 
 
 }
