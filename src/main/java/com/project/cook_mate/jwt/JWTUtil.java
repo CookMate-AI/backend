@@ -2,6 +2,7 @@ package com.project.cook_mate.jwt;
 
 
 import io.jsonwebtoken.*;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -47,17 +48,19 @@ public class JWTUtil {
                 .compact();
     }
 
-    public boolean validateToken(String token) {
+    //토큰 검증
+    public int validateToken(String token) {
         try {
             Jws<Claims> claims = Jwts.parser()
                     .setSigningKey(secretKey)
                     .build()
                     .parseClaimsJws(token);
-            return true;
+            return 0;
         } catch (SecurityException | MalformedJwtException e) {
             System.out.println("잘못된 JWT 서명입니다.");
         } catch (ExpiredJwtException e) {
             System.out.println("만료된 JWT 토큰입니다.");
+            return 1;
         } catch (UnsupportedJwtException e) {
             System.out.println("지원되지 않는 JWT 토큰입니다.");
         }catch (io.jsonwebtoken.security.SignatureException e) {
@@ -65,7 +68,26 @@ public class JWTUtil {
         } catch (IllegalArgumentException e) {
             System.out.println("JWT 토큰이 잘못되었습니다.");
         }
-        return false;
+        return 2;
+    }
+
+    //토큰 만료시간 가져오기 (토큰이 끝나는 시간 - 현재 시간 = 남은 토큰 유지 시간)
+    public long getExpirationTime(String token) {
+        Claims claims = Jwts.parser()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.getExpiration().getTime() - System.currentTimeMillis();
+    }
+
+    // 토큰에서 추출하는 메서드
+    public String extractToken(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            return header.substring(7);
+        }
+        return null;
     }
 
 

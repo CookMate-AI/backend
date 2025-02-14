@@ -2,6 +2,7 @@ package com.project.cook_mate.jwt;
 
 import com.project.cook_mate.user.dto.CustomUserDetails;
 import com.project.cook_mate.user.model.User;
+import com.project.cook_mate.user.service.AuthService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,6 +19,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JWTFilter extends OncePerRequestFilter {
     private final JWTUtil jwtUtil;
+    private final AuthService authService;
 
 
     @Override
@@ -44,29 +46,39 @@ public class JWTFilter extends OncePerRequestFilter {
             response.setContentType("application/json");
             response.getWriter().write("{\"error\": \"no Token\"}");
 
-//            filterChain.doFilter(request, response);
-
-            //토큰이 없는 경우이기에 filterchain을 끊고 메서드 종료
             return;
 
         }
         System.out.println("authorization now");
-        String token = authorization.split(" ")[1]; // 접두사 제거 - bearer 제거
 
-        if (!jwtUtil.validateToken(token)) {
+        String token = jwtUtil.extractToken(request);
+
+        // 블랙리스트 확인 (로그아웃한 토큰인지)
+        if (token != null && authService.isBlacklisted(token)) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"Invalid JWT Token\"}");
+            response.setCharacterEncoding("UTF-8");
+            response.setContentType("application/json; charset=UTF-8");
+            response.getWriter().write("{\"error\": \"로그아웃된 토큰입니다.\"}");
+            return;
+        }
+
+        int check = jwtUtil.validateToken(token);
+
+        if (check == 2) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.setCharacterEncoding("UTF-8");
+            response.setContentType("application/json; charset=UTF-8");
+            response.getWriter().write("{\"error\": \"토큰 문제\"}");
             return;
         }
 
         //토큰 유효시간 검증
-        if(jwtUtil.isExpired(token)){
+        else if(check == 1){
             System.out.println("token expired");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"Token expired\"}");
-//            filterChain.doFilter(request, response);
+            response.setCharacterEncoding("UTF-8");
+            response.setContentType("application/json; charset=UTF-8");
+            response.getWriter().write("{\"error\": \"토큰이 만료되었습니다. 다시 로그인 부탁드립니다.\"}");
             return;
         }
         System.out.println("토큰 이상X");
