@@ -1,6 +1,8 @@
 package com.project.cook_mate.jwt;
 
 import com.project.cook_mate.user.dto.CustomUserDetails;
+import com.project.cook_mate.user.model.User;
+import com.project.cook_mate.user.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -10,10 +12,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Optional;
 
 //로그인 확인 담당
 @RequiredArgsConstructor
@@ -21,6 +25,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager; //검증 담당
     private final JWTUtil jwtUtil;
+    private final UserRepository userRepository;
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
@@ -29,12 +34,16 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String password = obtainPassword(request);
 
         // 이 부분에 id 기반 탈퇴했는지 확인 -> 해당 id는 탈퇴한 유저입니다 등 분기점 필요
+        Optional<User> user = userRepository.findByUserIdAndSecession(username, 1);
 
+        if(user.isEmpty()){
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(username, password, null);
 
-
-
         return authenticationManager.authenticate(authToken);
+        }else{
+            System.out.println("탈퇴하거나 없는 회원");
+            throw new UsernameNotFoundException("User not found");
+        }
 
     }
 

@@ -1,11 +1,14 @@
 package com.project.cook_mate.user.controller;
 
+import com.project.cook_mate.jwt.JWTUtil;
 import com.project.cook_mate.user.dto.CustomUserDetails;
 import com.project.cook_mate.user.dto.UserDto;
 import com.project.cook_mate.user.dto.UserResponseDto;
+import com.project.cook_mate.user.service.AuthService;
 import com.project.cook_mate.user.service.MailService;
 import com.project.cook_mate.user.service.UserCheckService;
 import com.project.cook_mate.user.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +25,8 @@ public class UserController {
     private final UserCheckService userCheckService;
     private final MailService mailService;
     private final UserService userService;
+    private final AuthService authService;
+    private final JWTUtil jwtUtil;
 
     @GetMapping("/test")
     public ResponseEntity<?> test(){
@@ -166,17 +171,6 @@ public class UserController {
         }
     }
 
-//    @PutMapping("/info")
-//    public ResponseEntity<?> editInformation(@AuthenticationPrincipal CustomUserDetails customUserDetails,
-//                                             @RequestPart("nickName") String nickName, @RequestPart("userPw") String userPw,
-//                                             @RequestPart("num") String num){
-//        System.out.println("wowowowowowowo");
-//        String id = customUserDetails.getUsername();
-//        ResponseEntity response = userService.changePersonalInfo(id, userPw, nickName, num);
-//
-//        return response;
-//    }
-
     @PutMapping("/info")
     public ResponseEntity<?> editInformation(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                              @RequestBody Map<String, Object> requestData){
@@ -184,6 +178,28 @@ public class UserController {
         ResponseEntity response = userService.changePersonalInfo(id, requestData);
 
         return response;
+    }
+
+    @DeleteMapping("/secession")
+    public ResponseEntity<?> secessionUser(@AuthenticationPrincipal CustomUserDetails customUserDetails){
+        String id = customUserDetails.getUsername();
+        ResponseEntity response = userService.deleteUser(id);
+
+        return response;
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        String token = jwtUtil.extractToken(request);
+        if (token == null) {
+            return ResponseEntity.badRequest().body("{\"error\": \"토큰이 필요합니다.\"}");
+        }
+
+        // 토큰 남은 시간 확인 후 Redis에 추가
+        long expiration = jwtUtil.getExpirationTime(token);
+        authService.addToBlacklist(token, expiration);
+
+        return ResponseEntity.ok("{\"message\": \"로그아웃 성공\"}");
     }
 
 }

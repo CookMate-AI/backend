@@ -67,7 +67,7 @@ public class UserService {
     }
 
     public String findPw(String userId, String email){
-        Optional<User> optionalUser = userRepository.findByuserIdAndEmail(userId,email);
+        Optional<User> optionalUser = userRepository.findByUserIdAndEmailAndSecession(userId,email, 0);
 
         if(optionalUser.isPresent()){
             User user = optionalUser.get();
@@ -118,6 +118,24 @@ public class UserService {
 
         return ResponseEntity.ok().build();
 
+    }
+
+    public ResponseEntity deleteUser(String userId){
+        Optional<User> optionalUser = userRepository.findById(userId);
+
+        if (optionalUser.isEmpty()){
+            return ResponseEntity.badRequest().body(Map.of("message", "해당하는 개인정보 없음"));
+        }
+        try {
+            User user = optionalUser.get();
+            user.setSecession(1);
+            userRepository.save(user);
+        }catch (Exception e){
+            return ResponseEntity.internalServerError().body(Map.of("message", "데이터베이스 에러"));
+        }
+
+
+        return ResponseEntity.ok().build();
 
     }
 

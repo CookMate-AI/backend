@@ -3,6 +3,8 @@ package com.project.cook_mate.config;
 import com.project.cook_mate.jwt.JWTFilter;
 import com.project.cook_mate.jwt.JWTUtil;
 import com.project.cook_mate.jwt.LoginFilter;
+import com.project.cook_mate.user.repository.UserRepository;
+import com.project.cook_mate.user.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -30,6 +32,8 @@ public class SecurityConfig {
 
     private final AuthenticationConfiguration authenticationConfiguration;
     private final JWTUtil jwtUtil;
+    private final UserRepository userRepository;
+    private final AuthService authService;
 
 
     @Bean
@@ -47,7 +51,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        LoginFilter loginFilter = new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil);
+        LoginFilter loginFilter = new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, userRepository);
         loginFilter.setFilterProcessesUrl("/users/signin");
 
         http
@@ -96,7 +100,7 @@ public class SecurityConfig {
                 .addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class);
 
         http
-                .addFilterAfter(new JWTFilter(jwtUtil), LoginFilter.class);
+                .addFilterAfter(new JWTFilter(jwtUtil, authService), LoginFilter.class);
         //세션설정
         http
                 .sessionManagement((session) -> session

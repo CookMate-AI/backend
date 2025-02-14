@@ -18,15 +18,15 @@ public class UserCheckService {
     }
 
     public boolean duplicationEmail(String email){
-        return userRepository.existsByEmail(email);
+        return userRepository.existsByEmailAndSecession(email, 0);
     }
 
     public boolean duplicationNickName(String nickName){
-        return userRepository.existsByNickName(nickName);
+        return userRepository.existsByNickNameAndSecession(nickName, 0);
     }
 
     public String returnId(String email){
-        Optional<UserDto> user = userRepository.findUserDtoByUserEmail(email);
+        Optional<UserDto> user = userRepository.findUserDtoByUserEmail(email, 0);
         return user.get().getUserId();
     }
 
