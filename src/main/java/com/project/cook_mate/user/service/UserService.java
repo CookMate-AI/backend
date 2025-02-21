@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
@@ -101,11 +103,13 @@ public class UserService {
         if(num==1){
             String nickName = (String) requestData.get("nickName");
             user.setNickName(nickName);
+            user.setUpdateDate(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
             userRepository.save(user);
         } else if (num==2) {
             String userPw = (String) requestData.get("userPw");
             String encodePw = bCryptPasswordEncoder.encode(userPw);
             user.setUserPw(encodePw);
+            user.setUpdateDate(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
             userRepository.save(user);
         }else if (num==3) {
             String nickName = (String) requestData.get("nickName");
@@ -113,6 +117,7 @@ public class UserService {
             user.setNickName(nickName);
             String encodePw = bCryptPasswordEncoder.encode(userPw);
             user.setUserPw(encodePw);
+            user.setUpdateDate(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
             userRepository.save(user);
         }
 
@@ -129,6 +134,7 @@ public class UserService {
         try {
             User user = optionalUser.get();
             user.setSecession(1);
+            user.setUpdateDate(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
             userRepository.save(user);
         }catch (Exception e){
             return ResponseEntity.internalServerError().body(Map.of("message", "데이터베이스 에러"));

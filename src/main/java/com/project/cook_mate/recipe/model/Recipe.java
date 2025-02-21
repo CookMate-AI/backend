@@ -27,9 +27,6 @@ public class Recipe {
     @Column(name = "content", length = 2000, nullable = false)
     private String content;
 
-    @Column(name = "url", length = 100, nullable = false)
-    private String url;
-
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
     private User user;
