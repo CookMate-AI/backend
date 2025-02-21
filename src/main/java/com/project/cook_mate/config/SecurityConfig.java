@@ -61,7 +61,7 @@ public class SecurityConfig {
                             public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                                 CorsConfiguration configuration = new CorsConfiguration();
 
-                                configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173")); // 경로 추가시 해당 경로 뒤에 , 하고 붙이면 가능
+                                configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:3000")); // 경로 추가시 해당 경로 뒤에 , 하고 붙이면 가능
                                 configuration.setAllowedMethods(Collections.singletonList("*")); //get, post등 모든 메서드 허용
                                 configuration.setAllowCredentials(true);
                                 configuration.setAllowedHeaders(Collections.singletonList("*")); //허용할 헤더
@@ -87,6 +87,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/users/find-id/send-Email").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users/find-id/certification").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users/find-pw").permitAll()
+
+                                .requestMatchers(HttpMethod.POST, "/recipe/menu").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/recipe/recommend").permitAll()
+
 
                         .requestMatchers(HttpMethod.GET, "/users/test").hasAuthority("user") //없어도 anyRequest로 인하여 인증 절차 거침
 
