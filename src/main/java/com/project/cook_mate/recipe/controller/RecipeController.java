@@ -33,27 +33,12 @@ public class RecipeController {
     }
 
     @PostMapping("/recommend")
-    public Mono<ResponseEntity<Map<String, Object>>> openRecipe(@RequestBody Map<String, Object> requestData){
+    public Mono<ResponseEntity<Map<String, Object>>> openRecipe(@RequestBody Map<String, Object> requestData,
+                                                                @AuthenticationPrincipal CustomUserDetails customUserDetails){
         String food = (String) requestData.get("food");
+        String userId = customUserDetails.getUsername();
 
-        try {
-            return recipeService.getRecipe(food)
-                    .map(result -> {
-                        if (result.length < 2) {
-                            return ResponseEntity.badRequest().body(Map.of("error", "잘못된 응답 형식"));
-                        }
-                        int category;
-                        try {
-                            category = Integer.parseInt(result[0].trim());
-                        } catch (NumberFormatException e) {
-                            return ResponseEntity.badRequest().body(Map.of("error", "카테고리 변환 실패"));
-                        }
-                        return ResponseEntity.ok(Map.of("category", category, "recipe", result[1]));
-                    });
-        } catch (Exception e) {
-            System.out.println(e);
-            throw new RuntimeException(e);
-        }
+        return recipeService.getRecipe(food, userId);
     }
 
     @PostMapping("/save")
