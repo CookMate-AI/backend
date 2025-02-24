@@ -25,6 +25,7 @@ public class JWTFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String requestURI = request.getRequestURI();
+        System.out.println(requestURI);
         if (requestURI.equals("/users/signup") || requestURI.equals("/users/check-id") ||
                         requestURI.equals("/users/check-Email/send-Email") || requestURI.equals("/users/check-Email/certification") ||
                         requestURI.equals("/users/check-Nname") || requestURI.equals("/users/signin") ||

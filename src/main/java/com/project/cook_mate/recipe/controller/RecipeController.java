@@ -1,9 +1,13 @@
 package com.project.cook_mate.recipe.controller;
 
+import com.project.cook_mate.recipe.dto.LoadRecipeResponseDto;
 import com.project.cook_mate.recipe.dto.RecipeRequestDto;
 import com.project.cook_mate.recipe.service.RecipeService;
 import com.project.cook_mate.user.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -36,9 +40,10 @@ public class RecipeController {
     public Mono<ResponseEntity<Map<String, Object>>> openRecipe(@RequestBody Map<String, Object> requestData,
                                                                 @AuthenticationPrincipal CustomUserDetails customUserDetails){
         String food = (String) requestData.get("food");
+        String ingredients = (String) requestData.get("ingredients");
         String userId = customUserDetails.getUsername();
 
-        return recipeService.getRecipe(food, userId);
+        return recipeService.getRecipe(ingredients, food, userId);
     }
 
     @PostMapping("/save")
@@ -53,6 +58,39 @@ public class RecipeController {
             return ResponseEntity.badRequest().build();
         }
 
+    }
+
+    @DeleteMapping("/my")
+    public ResponseEntity<Map<String, String>> deleteRecipe(@RequestBody Map<String, Object> requestData,
+                                                            @AuthenticationPrincipal CustomUserDetails customUserDetails){
+        int recipeId = (Integer)requestData.get("recipeId");
+        String userId = customUserDetails.getUsername();
+
+        try {
+            return recipeService.deleteRecipe(recipeId, userId);
+        }catch (Exception e){
+            System.out.println(e);
+            return ResponseEntity.badRequest().build();
+        }
+
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<?> loadRecipe(@RequestParam(defaultValue = "0") int page,
+                                                                  @AuthenticationPrincipal CustomUserDetails customUserDetails){
+        String userId = customUserDetails.getUsername();
+
+        try {
+            Page<LoadRecipeResponseDto> recipeList = recipeService.loadRecipe(page, userId);
+
+            if(recipeList.getContent().isEmpty()){
+                return ResponseEntity.ok(Map.of("message", "불러올 레시피가 없습니다."));
+            }
+            return ResponseEntity.ok(recipeList.getContent());
+        }catch (Exception e){
+            System.out.println(e);
+            return ResponseEntity.badRequest().build();
+        }
 
     }
 }

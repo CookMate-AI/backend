@@ -68,11 +68,12 @@ public class AIService {
                 });
     }
 
-    public Mono<String[]> getRecipe(String food) throws Exception{
+    public Mono<String[]> getRecipe(String ingredients, String food) throws Exception{
 
         WebClient webClient = webClientBuilder.baseUrl(apiUrl).build();
 
-        String prompt = String.format("우선 %s를 카테고리에 맞게 구분해줘(한식:1, 양식:2, 중식:3, 일식:4, 그 외:5). 그리고 %s의 레시피를 알려줘. 대신 레시피 출력전에 구분자(|)로 구분해서 출력해줘", food, food);
+        String prompt = String.format("우선 %s를 카테고리에 맞게 구분해줘(한식:1, 양식:2, 중식:3, 일식:4, 그 외:5). " +
+                "그리고 %s가 들어간 %s의 레시피를 한글로 알려줘. 레시피의 경우, 카테고리(숫자만)를 먼저 작성후 구분자(|)로 구분한 뒤에 출력해줘", food, ingredients, food);
 
         return webClient.post()
                 .uri(uriBuilder -> uriBuilder.queryParam("key", apiKey).build())
@@ -88,7 +89,7 @@ public class AIService {
                 ))
                 .retrieve()
                 .bodyToMono(Map.class)
-//                .doOnNext(response -> System.out.println("🔹 API 응답: " + response))
+                .doOnNext(response -> System.out.println("🔹 API 응답: " + response))
                 .doOnError(error -> System.out.println("❌ 오류 발생: " + error.getMessage()))
                 .map(response -> {
                     try {

@@ -35,8 +35,8 @@ public class UserController {
     }
 
     @GetMapping("/check-id")
-    public ResponseEntity<?> checkId(@RequestBody Map<String, Object> requestData){
-        String userId = (String) requestData.get("userId");
+    public ResponseEntity<?> checkId(@RequestParam String userId){
+//        String userId = (String) requestData.get("userId");
         System.out.println(userId);
         boolean isExist = userCheckService.duplicationId(userId);
 
@@ -48,8 +48,8 @@ public class UserController {
     }
 
     @PostMapping("/check-Email/send-Email")
-    public ResponseEntity<?> certificationNumber(@RequestBody Map<String, Object> requestData){
-        String email = (String) requestData.get("email");
+    public ResponseEntity<?> certificationNumber(@RequestParam String email){
+//        String email = (String) requestData.get("email");
         boolean isExist = userCheckService.duplicationEmail(email);
 
         if(isExist){
@@ -80,8 +80,8 @@ public class UserController {
     }
 
     @GetMapping("/check-Nname")
-    public ResponseEntity<?> checkNickName(@RequestBody Map<String, Object> requestData){
-        String nickName = (String) requestData.get("nickName");
+    public ResponseEntity<?> checkNickName(@RequestParam String nickName){
+//        String nickName = (String) requestData.get("nickName");
         boolean isExist = userCheckService.duplicationNickName(nickName);
 
         if(isExist){
