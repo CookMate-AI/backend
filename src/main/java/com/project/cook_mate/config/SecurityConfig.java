@@ -7,6 +7,7 @@ import com.project.cook_mate.user.repository.UserRepository;
 import com.project.cook_mate.user.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -35,6 +36,9 @@ public class SecurityConfig {
     private final UserRepository userRepository;
     private final AuthService authService;
 
+    @Value("${ngrok.url}")
+    private String ngrokUrl;
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -62,7 +66,7 @@ public class SecurityConfig {
                                 CorsConfiguration configuration = new CorsConfiguration();
 
                                 configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:3000",
-                                        "http://localhost:8080", "https://3462-175-117-45-156.ngrok-free.app")); // 경로 추가시 해당 경로 뒤에 , 하고 붙이면 가능
+                                        "http://localhost:8080", ngrokUrl)); // 경로 추가시 해당 경로 뒤에 , 하고 붙이면 가능
                                 configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE")); //get, post등 모든 메서드 허용
                                 configuration.setAllowCredentials(true);
                                 configuration.setAllowedHeaders(Collections.singletonList("*")); //허용할 헤더

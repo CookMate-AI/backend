@@ -11,7 +11,7 @@
 //    public void addCorsMappings(CorsRegistry corsRegistry) {
 //
 //        corsRegistry.addMapping("/**")
-//                .allowedOrigins("http://localhost:3000", "http://localhost:5173", "https://3462-175-117-45-156.ngrok-free.app", "http://localhost:8080")
+//                .allowedOrigins("http://localhost:3000", "http://localhost:5173", "http://localhost:8080")
 //                .allowedMethods("GET", "POST", "PUT", "DELETE")
 //                .allowedHeaders("Authorization", "Content-Type")
 //                .allowCredentials(true)  // 🔹 withCredentials 허용
