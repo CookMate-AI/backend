@@ -61,8 +61,9 @@ public class SecurityConfig {
                             public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                                 CorsConfiguration configuration = new CorsConfiguration();
 
-                                configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:3000")); // 경로 추가시 해당 경로 뒤에 , 하고 붙이면 가능
-                                configuration.setAllowedMethods(Collections.singletonList("*")); //get, post등 모든 메서드 허용
+                                configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:3000",
+                                        "http://localhost:8080", "https://3462-175-117-45-156.ngrok-free.app")); // 경로 추가시 해당 경로 뒤에 , 하고 붙이면 가능
+                                configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE")); //get, post등 모든 메서드 허용
                                 configuration.setAllowCredentials(true);
                                 configuration.setAllowedHeaders(Collections.singletonList("*")); //허용할 헤더
                                 configuration.setMaxAge(3600L); //허용을 유지할 시간

@@ -2,6 +2,7 @@ package com.project.cook_mate.recipe.service;
 
 import com.project.cook_mate.category.model.Category;
 import com.project.cook_mate.category.repository.CategoryRepository;
+import com.project.cook_mate.recipe.dto.LoadRecipeResponseDto;
 import com.project.cook_mate.recipe.dto.RecipeRequestDto;
 import com.project.cook_mate.recipe.dto.RecipeResponseDto;
 import com.project.cook_mate.recipe.model.Recipe;
@@ -10,6 +11,9 @@ import com.project.cook_mate.user.model.User;
 import com.project.cook_mate.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,21 +36,13 @@ public class RecipeService {
 
     private final AIService aiService;
 
-    @Value("${gemini.api.key}")
-    private String apiKey;
-
-    @Value("${gemini.api.url}")
-    private String apiUrl;
-
-    private final WebClient.Builder webClientBuilder;
-
     public Mono<List<String>> recommendMenu(String ingredients, int count) throws Exception{
         return aiService.recommendMenu(ingredients,1);
 
     }
 
     @Transactional(readOnly = true)
-    public Mono<ResponseEntity<Map<String, Object>>> getRecipe(String food, String userId){
+    public Mono<ResponseEntity<Map<String, Object>>> getRecipe(String ingredients, String food, String userId){
 
         Optional<RecipeResponseDto> recipe = recipeRepository.findByFoodNameAndUserId(food, userId);
 
@@ -58,7 +54,7 @@ public class RecipeService {
         }
         else {
             try {
-                return aiService.getRecipe(food)
+                return aiService.getRecipe(ingredients, food)
                         .map(result -> {
                             if (result.length < 2) {
                                 return ResponseEntity.badRequest().body(Map.of("error", "잘못된 응답 형식"));
@@ -91,6 +87,32 @@ public class RecipeService {
             recipeRepository.save(recipe);
             return ResponseEntity.ok().body(Map.of("message", "레시피 저장 완료"));
         }
+
+    }
+
+    public ResponseEntity<Map<String, String>> deleteRecipe(int recipeId, String userId){
+//        Optional<Recipe> optionalRecipe = recipeRepository.findById(recipeId);
+        Optional<Recipe> optionalRecipe = recipeRepository.findByRecipeIdAndUser_UserId(recipeId, userId); //userId를 통해서도 2차 검증으로 확실한 데이터 삭제하려 했지만 문제 발생
+
+
+        if(optionalRecipe.isEmpty()){
+            System.out.println("해당 레시피 id없음");
+            return ResponseEntity.badRequest().body(Map.of("message", "해당 레시피 id없음"));
+        }else{
+            Recipe recipe = optionalRecipe.get();
+            recipeRepository.delete(recipe);
+            return ResponseEntity.ok().body(Map.of("message", "레시피 삭제 완료"));
+        }
+
+    }
+
+    public Page<LoadRecipeResponseDto> loadRecipe(int page, String userId){
+
+        int size = 12;
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        return recipeRepository.findRecipesByUserId(userId, pageable);
 
     }
 
