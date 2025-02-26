@@ -2,6 +2,7 @@ package com.project.cook_mate.user.service;
 
 import com.project.cook_mate.user.dto.UserDto;
 import com.project.cook_mate.user.dto.UserResponseDto;
+import com.project.cook_mate.user.log.LogHelper;
 import com.project.cook_mate.user.model.User;
 import com.project.cook_mate.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,8 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserCheckService userCheckService;
     private final PasswordGenerator passwordGenerator;
+
+    private final LogHelper logHelper;
 
     public boolean signUp(UserDto userDto){
 
@@ -137,6 +140,7 @@ public class UserService {
             user.setUpdateDate(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
             userRepository.save(user);
         }catch (Exception e){
+            logHelper.handleException(e);
             return ResponseEntity.internalServerError().body(Map.of("message", "데이터베이스 에러"));
         }
 

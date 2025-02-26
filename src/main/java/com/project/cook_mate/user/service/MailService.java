@@ -1,5 +1,6 @@
 package com.project.cook_mate.user.service;
 
+import com.project.cook_mate.user.log.LogHelper;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,8 @@ public class MailService {
     private JavaMailSender javaMailSender;
     private final RedisTemplate<String, String> redisTemplate;
 
+    private final LogHelper logHelper;
+
 
     public void sendEmail(String Email, int num, String detail) {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
@@ -39,6 +42,7 @@ public class MailService {
             }
             javaMailSender.send(mimeMessage);
         } catch (MessagingException e) {
+            logHelper.handleException(e);
             e.printStackTrace(); // 에러 출력
         }
     }
@@ -94,7 +98,7 @@ public class MailService {
 //        if(Boolean.TRUE.equals(redisTemplate.hasKey(key))) //없어도 자동 덮어씌우기 가능(다만 로그나 디버깅 측면에서 이부분을 사용가능 함)
 //            deleteAuthCode(email);
 
-        redisTemplate.opsForValue().set(key, code, 3100, TimeUnit.SECONDS); //5분 인증시간 -> 10초는 저장하고 보내는 동안의 딜레이 시간 고려
+        redisTemplate.opsForValue().set(key, code, 310, TimeUnit.SECONDS); //5분 인증시간 -> 10초는 저장하고 보내는 동안의 딜레이 시간 고려
     }
 
     // 인증 코드 가져오기
