@@ -2,6 +2,7 @@ package com.project.cook_mate.recipe.controller;
 
 import com.project.cook_mate.recipe.dto.LoadRecipeResponseDto;
 import com.project.cook_mate.recipe.dto.RecipeRequestDto;
+import com.project.cook_mate.recipe.log.LogHelper2;
 import com.project.cook_mate.recipe.service.RecipeService;
 import com.project.cook_mate.user.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,8 @@ import java.util.Map;
 public class RecipeController {
 
     private final RecipeService recipeService;
+
+    private final LogHelper2 logHelper2;
 
     @PostMapping("/menu")
     public Mono<ResponseEntity<List<String>>> recommendMenu(@RequestBody Map<String, Object> requestData){
@@ -69,6 +72,7 @@ public class RecipeController {
         try {
             return recipeService.deleteRecipe(recipeId, userId);
         }catch (Exception e){
+            logHelper2.handleException(e);
             System.out.println(e);
             return ResponseEntity.badRequest().build();
         }
@@ -84,10 +88,13 @@ public class RecipeController {
             Page<LoadRecipeResponseDto> recipeList = recipeService.loadRecipe(page, userId);
 
             if(recipeList.getContent().isEmpty()){
+                logHelper2.requestFail("레시피 불러오기 실패 - 레시피 없음", userId);
                 return ResponseEntity.ok(Map.of("message", "불러올 레시피가 없습니다."));
             }
+            logHelper2.requestSuccess("레시피 불러오기 성공", userId);
             return ResponseEntity.ok(recipeList.getContent());
         }catch (Exception e){
+            logHelper2.handleException(e);
             System.out.println(e);
             return ResponseEntity.badRequest().build();
         }

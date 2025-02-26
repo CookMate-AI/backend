@@ -1,6 +1,7 @@
 package com.project.cook_mate.jwt;
 
 import com.project.cook_mate.user.dto.CustomUserDetails;
+import com.project.cook_mate.user.log.LogHelper;
 import com.project.cook_mate.user.model.User;
 import com.project.cook_mate.user.repository.UserRepository;
 import jakarta.servlet.FilterChain;
@@ -15,6 +16,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
@@ -27,20 +30,24 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private final JWTUtil jwtUtil;
     private final UserRepository userRepository;
 
+    private final LogHelper logHelper;
+
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
 
         String username = obtainUsername(request);
         String password = obtainPassword(request);
 
-        // 이 부분에 id 기반 탈퇴했는지 확인 -> 해당 id는 탈퇴한 유저입니다 등 분기점 필요
-        Optional<User> user = userRepository.findByUserIdAndSecession(username, 1);
+        logHelper.processUserRequest("로그인", username);
 
-        if(user.isEmpty()){
+        Optional<User> user = userRepository.findByUserIdAndSecession(username, 0);
+
+        if(user.isPresent()){
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(username, password, null);
 
         return authenticationManager.authenticate(authToken);
         }else{
+            logHelper.requestFail("로그인 실패 - 탈퇴하였거나 없는 회원", username);
             System.out.println("탈퇴하거나 없는 회원");
             throw new UsernameNotFoundException("User not found");
         }
@@ -53,6 +60,8 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
 
         String userId = customUserDetails.getUsername();
+        String nickname = customUserDetails.getNickName();
+        String encodedNickname = Base64.getEncoder().encodeToString(nickname.getBytes(StandardCharsets.UTF_8));
 
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
@@ -63,13 +72,17 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         String token = jwtUtil.createJwt(userId, role, 60*60*1000L);
 
+        logHelper.requestSuccess("로그인 성공", userId);
+
         response.addHeader("Authorization", "Bearer " + token);
+        response.addHeader("User-Nickname", encodedNickname);
 
     }
 
     //로그인 실패시 실행하는 메소드
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) {
+        logHelper.requestFail("로그인 실패 - id나 pw 틀림", obtainUsername(request));
         response.setStatus(401);
 
     }

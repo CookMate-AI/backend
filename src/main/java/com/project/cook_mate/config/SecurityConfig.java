@@ -3,6 +3,7 @@ package com.project.cook_mate.config;
 import com.project.cook_mate.jwt.JWTFilter;
 import com.project.cook_mate.jwt.JWTUtil;
 import com.project.cook_mate.jwt.LoginFilter;
+import com.project.cook_mate.user.log.LogHelper;
 import com.project.cook_mate.user.repository.UserRepository;
 import com.project.cook_mate.user.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,6 +37,8 @@ public class SecurityConfig {
     private final UserRepository userRepository;
     private final AuthService authService;
 
+    private final LogHelper logHelper;
+
     @Value("${ngrok.url}")
     private String ngrokUrl;
 
@@ -55,7 +58,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        LoginFilter loginFilter = new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, userRepository);
+        LoginFilter loginFilter = new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, userRepository, logHelper);
         loginFilter.setFilterProcessesUrl("/users/signin");
 
         http

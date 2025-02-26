@@ -4,6 +4,7 @@ import com.project.cook_mate.jwt.JWTUtil;
 import com.project.cook_mate.user.dto.CustomUserDetails;
 import com.project.cook_mate.user.dto.UserDto;
 import com.project.cook_mate.user.dto.UserResponseDto;
+import com.project.cook_mate.user.log.LogHelper;
 import com.project.cook_mate.user.service.AuthService;
 import com.project.cook_mate.user.service.MailService;
 import com.project.cook_mate.user.service.UserCheckService;
@@ -28,6 +29,8 @@ public class UserController {
     private final AuthService authService;
     private final JWTUtil jwtUtil;
 
+    private final LogHelper logHelper;
+
     @GetMapping("/test")
     public ResponseEntity<?> test(){
         System.out.println("test메서드 들어옴");
@@ -48,8 +51,8 @@ public class UserController {
     }
 
     @PostMapping("/check-Email/send-Email")
-    public ResponseEntity<?> certificationNumber(@RequestParam String email){
-//        String email = (String) requestData.get("email");
+    public ResponseEntity<?> certificationNumber(@RequestBody Map<String, Object> requestData){
+        String email = (String) requestData.get("email");
         boolean isExist = userCheckService.duplicationEmail(email);
 
         if(isExist){
@@ -94,19 +97,24 @@ public class UserController {
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody UserDto userDto){
         try {
+            logHelper.processUserRequest("회원가입", userDto.getUserId());
             boolean result = userService.signUp(userDto);
             if (result) {
+                logHelper.requestSuccess("회원가입 성공", userDto.getUserId());
                 return ResponseEntity.status(HttpStatus.CREATED) // 201 Created
                         .body("회원가입이 성공적으로 완료되었습니다.");
             }
+            logHelper.requestFail("회원가입 실패 - 에러참고", userDto.getUserId());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("회원가입에 실패했습니다.");
         }catch (IllegalArgumentException e) {
             // 유효성 검사 실패 시 (예: 중복된 아이디나 이메일)
+            logHelper.handleException(e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST) // 400 Bad Request
                     .body(e.getMessage());
         } catch (RuntimeException e) {
             // 서버 측 문제 발생 시
+            logHelper.handleException(e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR) // 500 Internal Server Error
                     .body("서버 오류가 발생했습니다. 다시 시도해주세요.");
         }
@@ -152,7 +160,7 @@ public class UserController {
         String result = userService.findPw(userId,email);
 
         if(result.equals("X")){
-            return ResponseEntity.ok(Map.of("message", "Id 와 email이 일치하지 않습니다"));
+            return ResponseEntity.status(202).body(Map.of("message", "Id 와 email이 일치하지 않습니다"));
         }else{
             System.out.println(result);
             mailService.sendEmail(email, 2, result);
@@ -175,7 +183,13 @@ public class UserController {
     public ResponseEntity<?> editInformation(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                                              @RequestBody Map<String, Object> requestData){
         String id = customUserDetails.getUsername();
+        logHelper.processUserRequest("회원 정보 수정", id);
+
         ResponseEntity response = userService.changePersonalInfo(id, requestData);
+        if(response.getStatusCode().is2xxSuccessful())
+            logHelper.requestSuccess("회원 정보 수정 완료", id);
+        else 
+            logHelper.requestFail("회원 정보 수정 실패 - 해당 회원X", id);
 
         return response;
     }
@@ -183,21 +197,34 @@ public class UserController {
     @DeleteMapping("/secession")
     public ResponseEntity<?> secessionUser(@AuthenticationPrincipal CustomUserDetails customUserDetails){
         String id = customUserDetails.getUsername();
+        logHelper.processUserRequest("회원 탈퇴", id);
+        
         ResponseEntity response = userService.deleteUser(id);
+        if (response.getStatusCode().is2xxSuccessful()){
+            logHelper.requestSuccess("회원 탈퇴 성공", id);
+        } else if (response.getStatusCode().value() == 400) {
+            logHelper.requestFail("회원 탈퇴 실패 - 해당 회원X", id);
+        }
 
         return response;
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletRequest request) {
+    public ResponseEntity<?> logout(HttpServletRequest request, @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        String id = customUserDetails.getUsername();
+        logHelper.processUserRequest("로그아웃", id);
+
         String token = jwtUtil.extractToken(request);
         if (token == null) {
+            logHelper.requestFail("로그아웃 실패 - 토큰 X", id);
             return ResponseEntity.badRequest().body("{\"error\": \"토큰이 필요합니다.\"}");
         }
 
         // 토큰 남은 시간 확인 후 Redis에 추가
         long expiration = jwtUtil.getExpirationTime(token);
         authService.addToBlacklist(token, expiration);
+
+        logHelper.requestSuccess("로그아웃 성공", id);
 
         return ResponseEntity.ok("{\"message\": \"로그아웃 성공\"}");
     }
