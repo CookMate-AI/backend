@@ -42,7 +42,7 @@ public class RecipeService {
     private final LogHelper2 logHelper;
 
     public Mono<List<String>> recommendMenu(String ingredients, int count) throws Exception{
-        return aiService.recommendMenu(ingredients,1);
+        return aiService.recommendMenu(ingredients,count);
 
     }
 
