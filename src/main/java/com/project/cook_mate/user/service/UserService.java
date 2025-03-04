@@ -55,7 +55,7 @@ public class UserService {
 
     }
 
-    private String generateNickname(){
+    public String generateNickname(){
         String letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         Random random = new Random();
         StringBuilder sb = new StringBuilder();

@@ -58,3 +58,8 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+test {
+	forkEvery = 0
+	jvmArgs '-XX:-ShowCodeDetailsInExceptionMessages'
+}
