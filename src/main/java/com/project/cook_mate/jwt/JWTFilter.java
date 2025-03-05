@@ -28,7 +28,7 @@ public class JWTFilter extends OncePerRequestFilter {
         System.out.println(requestURI);
         if (requestURI.equals("/users/signup") || requestURI.equals("/users/check-id") ||
                         requestURI.equals("/users/check-Email/send-Email") || requestURI.equals("/users/check-Email/certification") ||
-                        requestURI.equals("/users/check-Nname") || requestURI.equals("/users/signin") ||
+                        requestURI.equals("/users/check-nickname") || requestURI.equals("/users/signin") ||
                         requestURI.equals("/users/find-id/send-Email") || requestURI.equals("/users/find-id/certification") ||
                         requestURI.equals("/users/find-pw")
         ) {

@@ -90,7 +90,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/users/check-id").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users/check-Email/send-Email").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users/check-Email/certification").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/users/check-Nname").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/users/check-nickname").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users/signin").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users/find-id/send-Email").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users/find-id/certification").permitAll()
