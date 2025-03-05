@@ -82,7 +82,7 @@ public class UserController {
         }
     }
 
-    @GetMapping("/check-Nname")
+    @GetMapping("/check-nickname")
     public ResponseEntity<?> checkNickName(@RequestParam String nickName){
 //        String nickName = (String) requestData.get("nickName");
         boolean isExist = userCheckService.duplicationNickName(nickName);
@@ -192,6 +192,25 @@ public class UserController {
             logHelper.requestFail("회원 정보 수정 실패 - 해당 회원X", id);
 
         return response;
+    }
+
+    @PostMapping("/info")
+    public ResponseEntity<?> editInformation_checkPw(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+                                             @RequestBody Map<String, Object> requestData){
+        String id = customUserDetails.getUsername();
+        String pw = (String) requestData.get("pw");
+        logHelper.processUserRequest("회원 정보 수정 - 비밀번호 확인", id);
+
+        boolean isSuccess = userService.checkPw(id, pw);
+
+        if (!isSuccess){
+            logHelper.requestFail("비밀번호 확인 실패 - 비밀번호 불일치", id);
+            return ResponseEntity.status(404).body(Map.of("isSuccess", false));
+        }else {
+            logHelper.requestSuccess("비밀번호 확인 완료", id);
+            return ResponseEntity.ok().body(Map.of("isSuccess", true));
+
+        }
     }
 
     @DeleteMapping("/secession")

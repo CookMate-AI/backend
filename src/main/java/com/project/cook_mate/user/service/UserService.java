@@ -94,6 +94,18 @@ public class UserService {
 
     }
 
+    public boolean checkPw(String userId, String pw){
+        Optional<User> optionalUser = userRepository.findById(userId);
+//        String encodePw = bCryptPasswordEncoder.encode(pw);
+        User user = optionalUser.get();
+
+        if(bCryptPasswordEncoder.matches(pw, user.getUserPw())){
+            return true;
+        }else
+            return false;
+
+    }
+
     public ResponseEntity changePersonalInfo(String userId, Map<String, Object> requestData){
         Optional<User> optionalUser = userRepository.findById(userId);
 
