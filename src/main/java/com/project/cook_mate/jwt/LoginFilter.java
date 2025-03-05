@@ -5,9 +5,11 @@ import com.project.cook_mate.user.log.LogHelper;
 import com.project.cook_mate.user.model.User;
 import com.project.cook_mate.user.repository.UserRepository;
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -57,6 +59,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     //로그인 성공시 실행하는 메소드 (여기서 JWT를 발급하면 됨)
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) {
+
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
 
         String userId = customUserDetails.getUsername();
@@ -66,16 +69,36 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
         GrantedAuthority auth = iterator.next();
-
         String role = auth.getAuthority();
-        System.out.println(role);
 
-        String token = jwtUtil.createJwt(userId, role, 60*60*1000L);
+        //토큰 생성
+        String access = jwtUtil.createJwt("access", userId, role, 600000L);
+        String refresh = jwtUtil.createJwt("refresh", userId, role, 86400000L);
 
-        logHelper.requestSuccess("로그인 성공", userId);
+        response.setHeader("Authorization", access);
+        response.setHeader("User-Nickname", encodedNickname);
+        response.addCookie(createCookie("refresh",refresh));
+        response.setStatus(HttpStatus.OK.value());
 
-        response.addHeader("Authorization", "Bearer " + token);
-        response.addHeader("User-Nickname", encodedNickname);
+//        CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
+//
+//        String userId = customUserDetails.getUsername();
+//        String nickname = customUserDetails.getNickName();
+//        String encodedNickname = Base64.getEncoder().encodeToString(nickname.getBytes(StandardCharsets.UTF_8));
+//
+//        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+//        Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
+//        GrantedAuthority auth = iterator.next();
+//
+//        String role = auth.getAuthority();
+//        System.out.println(role);
+//
+//        String token = jwtUtil.createJwt(userId, role, 60*60*1000L);
+//
+//        logHelper.requestSuccess("로그인 성공", userId);
+//
+//        response.addHeader("Authorization", "Bearer " + token);
+//        response.addHeader("User-Nickname", encodedNickname);
 
     }
 
@@ -85,5 +108,16 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         logHelper.requestFail("로그인 실패 - id나 pw 틀림", obtainUsername(request));
         response.setStatus(401);
 
+    }
+
+    private Cookie createCookie(String key, String value) {
+
+        Cookie cookie = new Cookie(key, value);
+        cookie.setMaxAge(24*60*60);
+        //cookie.setSecure(true); //Https 적용시
+        //cookie.setPath("/"); //쿠키가 적용될 범위 설정 시
+        cookie.setHttpOnly(true); //js로 해당 쿠키 접근 못하게 설정
+
+        return cookie;
     }
 }
