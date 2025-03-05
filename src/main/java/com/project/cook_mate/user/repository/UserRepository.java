@@ -21,7 +21,7 @@ public interface UserRepository extends JpaRepository<User, String> {
     @Query("SELECT NEW com.project.cook_mate.user.dto.UserDto(u.userId, u.userPw, u.email) FROM User u WHERE u.email = :email AND u.secession = :secession")
     Optional<UserDto> findUserDtoByUserEmail(@Param("email") String email, @Param("secession") int secession);
 
-    Optional<User> findByUserIdAndEmailAndSecession(@Param("email") String email, @Param("userId") String userId, int secession);
+    Optional<User> findByUserIdAndEmailAndSecession( @Param("userId") String userId, @Param("email") String email, int secession);
 
     @Query("SELECT NEW com.project.cook_mate.user.dto.UserResponseDto(u.userId, u.nickName, u.email, u.joinDate, u.updateDate, u.role) FROM User u WHERE u.userId = :userId AND u.secession = :secession")
     Optional<UserResponseDto> findUserByUserId(@Param("userId") String userId, @Param("secession") int secession);

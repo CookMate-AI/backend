@@ -55,7 +55,7 @@ public class UserService {
 
     }
 
-    private String generateNickname(){
+    public String generateNickname(){
         String letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         Random random = new Random();
         StringBuilder sb = new StringBuilder();
@@ -91,6 +91,18 @@ public class UserService {
     public Optional<UserResponseDto> loadPersonalInfo(String userId){
         Optional<UserResponseDto> userResponseDto = userRepository.findUserByUserId(userId, 0);
         return userResponseDto;
+
+    }
+
+    public boolean checkPw(String userId, String pw){
+        Optional<User> optionalUser = userRepository.findById(userId);
+//        String encodePw = bCryptPasswordEncoder.encode(pw);
+        User user = optionalUser.get();
+
+        if(bCryptPasswordEncoder.matches(pw, user.getUserPw())){
+            return true;
+        }else
+            return false;
 
     }
 

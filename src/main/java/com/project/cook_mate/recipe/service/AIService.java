@@ -11,6 +11,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -37,7 +38,7 @@ public class AIService {
         WebClient webClient = webClientBuilder.baseUrl(apiUrl).build();
 
         String prompt = String.format("다음은 사용자가 제공한 재료 목록입니다: %s. "
-                + "이 재료들이 실제 음식 재료인지 검토한 후, "
+                + "이 재료들이 실제 음식 재료인지 검토한 후, 전부 음식재료라면 해당 재료들이 다 들어간 "
                 + "적절한 요리명을 %d개 추천해줘. 추천 해줄때는 다른 말 없이 요리명만 쉼표(,)로 구분해서 알려줘."
                 + "만약 재료가 의미 없는 단어이거나 이상하다면 '잘못된 입력'이라고 답해줘. ", ingredients, count);
 
@@ -62,12 +63,15 @@ public class AIService {
                 )
                 .map(response -> {
                     try {
+                        @SuppressWarnings("unchecked")
                         List<Map<String, Object>> candidates = (List<Map<String, Object>>) response.get("candidates");
                         if (candidates == null || candidates.isEmpty()) return List.of("추천 없음");
 
+                        @SuppressWarnings("unchecked")
                         Map<String, Object> content = (Map<String, Object>) candidates.get(0).get("content");
                         if (content == null) return List.of("추천 없음");
 
+                        @SuppressWarnings("unchecked")
                         List<Map<String, Object>> parts = (List<Map<String, Object>>) content.get("parts");
                         if (parts == null || parts.isEmpty()) return List.of("추천 없음");
 
@@ -95,8 +99,12 @@ public class AIService {
 
         WebClient webClient = webClientBuilder.baseUrl(apiUrl).build();
 
-        String prompt = String.format("우선 %s를 카테고리에 맞게 구분해줘(한식:1, 양식:2, 중식:3, 일식:4, 그 외:5). " +
-                "그리고 %s가 들어간 %s의 레시피를 한글로 알려줘. 레시피의 경우, 카테고리(숫자만)를 먼저 작성후 구분자(|)로 구분한 뒤에 출력해줘", food, ingredients, food);
+        String prompt = String.format("우선 %s를 카테고리에 맞게 구분해줘(한식:1, 양식:2, 중식:3, 일식:4, 기타 혹은 구분 어려운 경우:5). " +
+                "그리고 %s가 들어간 %s의 레시피를 1개만 한글로 알려주는데 재료의 종류나 양 그리고 각 과정에서 소요되는 시간도 제대로 명시를 해줘." +
+                "만약 재료가 개수가 지정이 안된경우엔 2인분 기준의 레시피로 작성해줘" +
+                "레시피 설명에 대한 목차 순서는 재료, 레시피, 팁 순으로 작성해주고 레시피 부분의 경우 서론을 붙이지 말고 레시피만 적어줘" +
+                "그리고 레시피의 경우, 작성할 때 앞에 아무것도 쓰지말고 카테고리에 해당하는 숫자를 먼저 작성후 구분자(|)로 구분한 뒤에 출력해줘" +
+                "예시) 2 | 레시피부분", food, ingredients, food);
 
         return webClient.post()
                 .uri(uriBuilder -> uriBuilder.queryParam("key", apiKey).build())
@@ -119,12 +127,15 @@ public class AIService {
                 )
                 .map(response -> {
                     try {
+                        @SuppressWarnings("unchecked")
                         List<Map<String, Object>> candidates = (List<Map<String, Object>>) response.get("candidates");
                         if (candidates == null || candidates.isEmpty()) return new String[]{"추천없음"};
 
+                        @SuppressWarnings("unchecked")
                         Map<String, Object> content = (Map<String, Object>) candidates.get(0).get("content");
                         if (content == null) return new String[]{"추천없음"};
 
+                        @SuppressWarnings("unchecked")
                         List<Map<String, Object>> parts = (List<Map<String, Object>>) content.get("parts");
                         if (parts == null || parts.isEmpty()) return new String[]{"추천없음"};
 

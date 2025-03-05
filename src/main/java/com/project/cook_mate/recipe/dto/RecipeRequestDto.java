@@ -16,14 +16,14 @@ public class RecipeRequestDto {
 
     private String food;
 
-    private String content;
+    private String recipe;
 
     private int category;
 
     public Recipe toEntity(User user, Category category){
         return Recipe.builder()
                 .foodName(food)
-                .content(content)
+                .content(recipe)
                 .user(user)
                 .category(category)
                 .build();
