@@ -86,6 +86,7 @@ public class JWTFilter extends OncePerRequestFilter {
 
         String category = jwtUtil.getCategory(authorization);
 
+
         if (!category.equals("access")) {
 
             //response body

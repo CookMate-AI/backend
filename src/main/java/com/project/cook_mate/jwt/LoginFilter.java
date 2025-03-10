@@ -127,4 +127,5 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         return cookie;
     }
+
 }
