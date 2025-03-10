@@ -40,7 +40,7 @@ public class JWTFilter extends OncePerRequestFilter {
         String authorization = request.getHeader("Authorization");
 
         //authorization 헤더 검증
-        if(authorization == null || !authorization.startsWith("Bearer ")){
+        if(authorization == null){
             System.out.println("token null");
 
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -52,10 +52,10 @@ public class JWTFilter extends OncePerRequestFilter {
         }
         System.out.println("authorization now");
 
-        String token = jwtUtil.extractToken(request);
+//        String token = jwtUtil.extractToken(request);
 
         // 블랙리스트 확인 (로그아웃한 토큰인지)
-        if (token != null && authService.isBlacklisted(token)) {
+        if (authorization != null && authService.isBlacklisted(authorization)) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.setCharacterEncoding("UTF-8");
             response.setContentType("application/json; charset=UTF-8");
@@ -63,7 +63,7 @@ public class JWTFilter extends OncePerRequestFilter {
             return;
         }
 
-        int check = jwtUtil.validateToken(token);
+        int check = jwtUtil.validateToken(authorization);
 
         if (check == 2) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
@@ -84,8 +84,11 @@ public class JWTFilter extends OncePerRequestFilter {
         }
         System.out.println("토큰 이상X");
 
-        String userId = jwtUtil.getUserId(token);
-        String role = jwtUtil.getRole(token); //회원만 있기에 user 로 가져옴
+        String category = jwtUtil.getCategory(authorization);
+
+
+        String userId = jwtUtil.getUserId(authorization);
+        String role = jwtUtil.getRole(authorization); //회원만 있기에 user 로 가져옴
 
         User user = new User();
         user.setUserId(userId);
