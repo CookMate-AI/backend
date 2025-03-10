@@ -57,11 +57,6 @@ public class JWTUtil {
     //토큰 검증
     public int validateToken(String token) {
         try {
-//            Jws<Claims> claims = Jwts.parser()
-//                    .setSigningKey(secretKey)
-//                    .build()
-//                    .parseClaimsJws(token);
-
             Jwts.parser()
                     .verifyWith(secretKey)
                     .build()
@@ -84,12 +79,6 @@ public class JWTUtil {
 
     //토큰 만료시간 가져오기 (토큰이 끝나는 시간 - 현재 시간 = 남은 토큰 유지 시간)
     public long getExpirationTime(String token) {
-//        Claims claims = Jwts.parser()
-//                .setSigningKey(secretKey)
-//                .build()
-//                .parseClaimsJws(token)
-//                .getBody();
-
         Claims claims = Jwts.parser()
                 .verifyWith(secretKey)
                 .build()
@@ -101,8 +90,8 @@ public class JWTUtil {
     // 토큰에서 추출하는 메서드
     public String extractToken(HttpServletRequest request) {
         String header = request.getHeader("Authorization");
-        if (header != null && header.startsWith("Bearer ")) {
-            return header.substring(7);
+        if (header != null) {
+            return header;
         }
         return null;
     }

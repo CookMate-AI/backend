@@ -9,7 +9,9 @@ import com.project.cook_mate.user.service.AuthService;
 import com.project.cook_mate.user.service.MailService;
 import com.project.cook_mate.user.service.UserCheckService;
 import com.project.cook_mate.user.service.UserService;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,12 +32,6 @@ public class UserController {
     private final JWTUtil jwtUtil;
 
     private final LogHelper logHelper;
-
-    @GetMapping("/test")
-    public ResponseEntity<?> test(){
-        System.out.println("test메서드 들어옴");
-        return ResponseEntity.ok(Map.of("message", "인증성공"));
-    }
 
     @GetMapping("/check-id")
     public ResponseEntity<?> checkId(@RequestParam String userId){
@@ -84,7 +80,6 @@ public class UserController {
 
     @GetMapping("/check-nickname")
     public ResponseEntity<?> checkNickName(@RequestParam String nickName){
-//        String nickName = (String) requestData.get("nickName");
         boolean isExist = userCheckService.duplicationNickName(nickName);
 
         if(isExist){
@@ -185,6 +180,11 @@ public class UserController {
         String id = customUserDetails.getUsername();
         logHelper.processUserRequest("회원 정보 수정", id);
 
+        if((Integer) requestData.get("num") != 2 && userCheckService.duplicationNickName((String) requestData.get("nickName"))){
+            logHelper.requestFail("회원 정보 수정 실패 - 닉네임 중복있음", id);
+            return ResponseEntity.badRequest().body(Map.of("message", "닉네임이 중복되었습니다. 다시 확인 부탁드립니다."));
+        }
+
         ResponseEntity response = userService.changePersonalInfo(id, requestData);
         if(response.getStatusCode().is2xxSuccessful())
             logHelper.requestSuccess("회원 정보 수정 완료", id);
@@ -201,15 +201,18 @@ public class UserController {
         String pw = (String) requestData.get("pw");
         logHelper.processUserRequest("회원 정보 수정 - 비밀번호 확인", id);
 
-        boolean isSuccess = userService.checkPw(id, pw);
+        String result = userService.checkPw(id, pw);
 
-        if (!isSuccess){
+        if (result.equals("inconsistency")){
             logHelper.requestFail("비밀번호 확인 실패 - 비밀번호 불일치", id);
             return ResponseEntity.status(404).body(Map.of("isSuccess", false));
-        }else {
+        }else if(result.equals("accordance")){
             logHelper.requestSuccess("비밀번호 확인 완료", id);
             return ResponseEntity.ok().body(Map.of("isSuccess", true));
 
+        }else{
+            logHelper.requestSuccess("비밀번호 확인 실패 - 없는 유저 및 서버 에러", id);
+            return ResponseEntity.status(500).body(Map.of("isSuccess", false));
         }
     }
 
@@ -229,19 +232,23 @@ public class UserController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletRequest request, @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response, @AuthenticationPrincipal CustomUserDetails customUserDetails) {
         String id = customUserDetails.getUsername();
         logHelper.processUserRequest("로그아웃", id);
 
-        String token = jwtUtil.extractToken(request);
-        if (token == null) {
-            logHelper.requestFail("로그아웃 실패 - 토큰 X", id);
+        String accessToken = jwtUtil.extractToken(request);
+        if (accessToken == null) {
+            logHelper.requestFail("로그아웃 실패 - accessToken X", id);
             return ResponseEntity.badRequest().body("{\"error\": \"토큰이 필요합니다.\"}");
         }
 
+        //refresh 삭제
+        Cookie cookie = authService.deleteRefreshToken(id);
+        response.addCookie(cookie);
+
         // 토큰 남은 시간 확인 후 Redis에 추가
-        long expiration = jwtUtil.getExpirationTime(token);
-        authService.addToBlacklist(token, expiration);
+        long expiration = jwtUtil.getExpirationTime(accessToken);
+        authService.addToBlacklist(accessToken, expiration);
 
         logHelper.requestSuccess("로그아웃 성공", id);
 

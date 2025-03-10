@@ -42,6 +42,9 @@ public class SecurityConfig {
     @Value("${ngrok.url}")
     private String ngrokUrl;
 
+    @Value("${deploy.url}")
+    private String deployUrl;
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -58,7 +61,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        LoginFilter loginFilter = new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, userRepository, logHelper);
+        LoginFilter loginFilter = new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, userRepository, authService, logHelper);
         loginFilter.setFilterProcessesUrl("/users/signin");
 
         http
@@ -69,7 +72,7 @@ public class SecurityConfig {
                                 CorsConfiguration configuration = new CorsConfiguration();
 
                                 configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:3000",
-                                        "http://localhost:8080", ngrokUrl)); // 경로 추가시 해당 경로 뒤에 , 하고 붙이면 가능
+                                        "http://localhost:8080", ngrokUrl, deployUrl)); // 경로 추가시 해당 경로 뒤에 , 하고 붙이면 가능
                                 configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE")); //get, post등 모든 메서드 허용
                                 configuration.setAllowCredentials(true);
                                 configuration.setAllowedHeaders(Collections.singletonList("*")); //허용할 헤더
@@ -95,6 +98,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/users/find-id/send-Email").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users/find-id/certification").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users/find-pw").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/reissue").permitAll()
 
                                 .requestMatchers(HttpMethod.POST, "/recipe/menu").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/recipe/recommend").permitAll()
