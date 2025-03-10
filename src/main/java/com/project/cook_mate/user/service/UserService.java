@@ -94,15 +94,19 @@ public class UserService {
 
     }
 
-    public boolean checkPw(String userId, String pw){
-        Optional<User> optionalUser = userRepository.findById(userId);
-//        String encodePw = bCryptPasswordEncoder.encode(pw);
-        User user = optionalUser.get();
+    public String checkPw(String userId, String pw){
+        try {
+            Optional<User> optionalUser = userRepository.findById(userId);
+            User user = optionalUser.get();
 
-        if(bCryptPasswordEncoder.matches(pw, user.getUserPw())){
-            return true;
-        }else
-            return false;
+            if(bCryptPasswordEncoder.matches(pw, user.getUserPw())){
+                return "accordance";
+            }else
+                return "inconsistency";
+        }catch (Exception e){
+            return "no data OR error";
+        }
+
 
     }
 

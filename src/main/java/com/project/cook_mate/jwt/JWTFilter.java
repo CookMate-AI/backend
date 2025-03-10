@@ -14,6 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 //jwt 검증
 @RequiredArgsConstructor
@@ -30,7 +31,7 @@ public class JWTFilter extends OncePerRequestFilter {
                         requestURI.equals("/users/check-Email/send-Email") || requestURI.equals("/users/check-Email/certification") ||
                         requestURI.equals("/users/check-nickname") || requestURI.equals("/users/signin") ||
                         requestURI.equals("/users/find-id/send-Email") || requestURI.equals("/users/find-id/certification") ||
-                        requestURI.equals("/users/find-pw")
+                        requestURI.equals("/users/find-pw") || requestURI.equals("/reissue")
         ) {
             filterChain.doFilter(request, response);
             return;
@@ -69,22 +70,33 @@ public class JWTFilter extends OncePerRequestFilter {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.setCharacterEncoding("UTF-8");
             response.setContentType("application/json; charset=UTF-8");
-            response.getWriter().write("{\"error\": \"토큰 문제\"}");
+            response.getWriter().write("{\"error\": \"정상적이지 않은 토큰 문제\"}");
             return;
         }
 
         //토큰 유효시간 검증
         else if(check == 1){
             System.out.println("token expired");
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE); //refresh 토큰을 통한 재발급을 위한 상태코드 (406)
             response.setCharacterEncoding("UTF-8");
             response.setContentType("application/json; charset=UTF-8");
-            response.getWriter().write("{\"error\": \"토큰이 만료되었습니다. 다시 로그인 부탁드립니다.\"}");
+            response.getWriter().write("{\"error\": \"토큰이 만료되었습니다. refresh 요청 필요\"}");
             return;
         }
-        System.out.println("토큰 이상X");
 
         String category = jwtUtil.getCategory(authorization);
+
+
+        if (!category.equals("access")) {
+
+            //response body
+            PrintWriter writer = response.getWriter();
+            writer.print("invalid access token");
+
+            //response status code
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
 
 
         String userId = jwtUtil.getUserId(authorization);
@@ -92,7 +104,7 @@ public class JWTFilter extends OncePerRequestFilter {
 
         User user = new User();
         user.setUserId(userId);
-        user.setUserPw("temppassword"); //매번 db로 확인하면 효율적으로 문제가 생겨 임의로 지정
+//        user.setUserPw("temppassword"); //매번 db로 확인하면 효율적으로 문제가 생겨 임의로 지정
         user.setRole(role);
 
         CustomUserDetails customUserDetails = new CustomUserDetails(user);
