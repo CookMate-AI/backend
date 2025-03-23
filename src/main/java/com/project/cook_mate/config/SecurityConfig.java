@@ -78,7 +78,8 @@ public class SecurityConfig {
                                 configuration.setAllowedHeaders(Collections.singletonList("*")); //허용할 헤더
                                 configuration.setMaxAge(3600L); //허용을 유지할 시간
 
-                                configuration.setExposedHeaders(Collections.singletonList("Authorization")); //Authorization헤더 허용
+//                                configuration.setExposedHeaders(Collections.singletonList("Authorization")); //Authorization헤더 허용
+                                configuration.setExposedHeaders(Arrays.asList("Authorization", "Set-Cookie"));
 
                                 return configuration;
                             }

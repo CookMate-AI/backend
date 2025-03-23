@@ -21,6 +21,7 @@ public class ReissueController {
 
     @PostMapping("/reissue")
     public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
+        System.out.println("REISSUE 들어옴");
 
         //get refresh token
         String refresh = null;
@@ -62,7 +63,7 @@ public class ReissueController {
         }
 
         //새 토큰 발급
-        String newAccess = jwtUtil.createJwt("access", userId, role, 600000L); //600000 - 10분
+        String newAccess = jwtUtil.createJwt("access", userId, role, 60000L); //600000 - 10분
         String newRefresh = jwtUtil.createJwt("refresh", userId, role, 86400000L);
 
         //레디스에 refresh 토큰 저장
@@ -82,6 +83,9 @@ public class ReissueController {
         //cookie.setSecure(true);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
+
+        cookie.setAttribute("SameSite", "None");
+        cookie.setSecure(true);
 
         return cookie;
     }
