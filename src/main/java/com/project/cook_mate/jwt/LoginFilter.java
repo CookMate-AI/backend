@@ -87,7 +87,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         }
 
         //토큰 생성
-        String access = jwtUtil.createJwt("access", userId, role, 600000L); // 앞에 3 빼줘야 함 지금은 테스트 용
+        String access = jwtUtil.createJwt("access", userId, role, 60000L); // 앞에 3 빼줘야 함 지금은 테스트 용
         String refresh = jwtUtil.createJwt("refresh", userId, role, 86400000L);
 
         authService.saveRefreshToken(userId, refresh, 86400000L);
@@ -96,6 +96,10 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         response.setHeader("User-Nickname", encodedNickname);
         response.addCookie(createCookie("refresh",refresh));
         response.setStatus(HttpStatus.OK.value());
+
+
+//        response.setHeader("Access-Control-Allow-Credentials", "true");
+//        response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
     }
 
     //로그인 실패시 실행하는 메소드
@@ -124,6 +128,9 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         //cookie.setSecure(true); //Https 적용시
         cookie.setPath("/"); //쿠키가 적용될 범위 설정 시
         cookie.setHttpOnly(true); //js로 해당 쿠키 접근 못하게 설정
+
+        cookie.setAttribute("SameSite", "None");
+        cookie.setSecure(true);
 
         return cookie;
     }
