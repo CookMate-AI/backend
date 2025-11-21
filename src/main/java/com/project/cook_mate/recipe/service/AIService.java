@@ -26,6 +26,8 @@ public class AIService {
     @Value("${gemini.api.url}")
     private String apiUrl;
 
+    private static final String MODEL_NAME = "gemini-2.5-flash";
+
     private final WebClient.Builder webClientBuilder;
 
     private final LogHelper2 logHelper;
@@ -39,11 +41,15 @@ public class AIService {
 
         String prompt = String.format("다음은 사용자가 제공한 재료 목록입니다: %s. "
                 + "이 재료들이 실제 음식 재료인지 검토한 후, 전부 음식재료라면 해당 재료들이 다 들어간 "
-                + "적절한 요리명을 %d개 추천해줘. 추천 해줄때는 다른 말 없이 요리명만 쉼표(,)로 구분해서 알려줘."
+                + "적절한 요리명을 %d개 추천해줘. 추천 해줄때는 너무 큰 범주의 요리명 말고 자세한 요리명으로 부탁해." +
+                "예를 들어 카레면 카레로 알려주는게 아닌 일본식 카레와 같이 정확해야 해." +
+                "왜냐하면 해당 요리 명을 고르면 한식, 일식, 중식 등으로 지정할 거라 명확해야 해." +
+                "그리고 다른 말 없이 요리명만 쉼표(,)로 구분해서 알려줘."
                 + "만약 재료가 의미 없는 단어이거나 이상하다면 '잘못된 입력'이라고 답해줘. ", ingredients, count);
 
         return webClient.post()
-                .uri(uriBuilder -> uriBuilder.queryParam("key", apiKey).build())
+                .uri(uriBuilder -> uriBuilder.path("/models/" + MODEL_NAME + ":generateContent")
+                        .queryParam("key", apiKey).build())
                 .header("Content-Type", "application/json") // ✅ 헤더 추가
                 .bodyValue(Map.of(
                         "contents", List.of(
@@ -107,7 +113,8 @@ public class AIService {
                 "예시) 2 | 레시피부분", food, ingredients, food);
 
         return webClient.post()
-                .uri(uriBuilder -> uriBuilder.queryParam("key", apiKey).build())
+                .uri(uriBuilder -> uriBuilder.path("/models/" + MODEL_NAME + ":generateContent")
+                        .queryParam("key", apiKey).build())
                 .header("Content-Type", "application/json") // ✅ 헤더 추가
                 .bodyValue(Map.of(
                         "contents", List.of(

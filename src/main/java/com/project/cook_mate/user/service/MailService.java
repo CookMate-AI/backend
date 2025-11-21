@@ -54,13 +54,13 @@ public class MailService {
     }
 
 
-    public String generateRandomNumber() {
+    private String generateRandomNumber() {
         Random random = new Random();
         int randomNumber = 100000 + random.nextInt(900000); // 6자리 숫자 생성
         return String.valueOf(randomNumber);
     }
 
-    public String generateContent(String Email){
+    private String generateContent(String Email){
         String num = generateRandomNumber();
         saveAuthCode(Email, num);
 
@@ -70,7 +70,7 @@ public class MailService {
         return content;
     }
 
-    public String generateContent2(String Email, String detail){
+    private String generateContent2(String Email, String detail){
 
         String content =
                 "<h1 style='font-size: 20px;'>변경된 비밀번호입니다. 로그인 후 변경 부탁드립니다!!</h1>" +
