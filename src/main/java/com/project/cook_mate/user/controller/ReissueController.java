@@ -2,6 +2,8 @@ package com.project.cook_mate.user.controller;
 
 
 import com.project.cook_mate.jwt.JWTUtil;
+import com.project.cook_mate.jwt.TokenValidationResult;
+import com.project.cook_mate.jwt.constant.SecurityConstants;
 import com.project.cook_mate.user.service.AuthService;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
@@ -24,69 +26,80 @@ public class ReissueController {
         System.out.println("REISSUE 들어옴");
 
         //get refresh token
-        String refresh = null;
-        Cookie[] cookies = request.getCookies();
-        for (Cookie cookie : cookies) {
-
-            if (cookie.getName().equals("refresh")) {
-
-                refresh = cookie.getValue();
-            }
-        }
-
+        String refresh = extractRefreshToken(request);
         if (refresh == null) {
-            return new ResponseEntity<>("refresh token null", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("refresh token이 없습니다", HttpStatus.BAD_REQUEST);
         }
 
-        // JWT 형식 검증
-        int validationResult = jwtUtil.validateToken(refresh);
-        if(validationResult == 1){
-            return new ResponseEntity<>("expired token - try to login again", HttpStatus.NOT_ACCEPTABLE);
-        }
-        else if (validationResult != 0) {
-            return new ResponseEntity<>("invalid refresh token", HttpStatus.BAD_REQUEST);
-        }
-
-        // 토큰이 refresh인지 확인 (발급시 페이로드에 명시)
-        String category = jwtUtil.getCategory(refresh);
-
-        if (!category.equals("refresh")) {
-            //response status code
-            return new ResponseEntity<>("invalid refresh token", HttpStatus.BAD_REQUEST);
+        // 토큰 검증
+        TokenValidationResult validationResult = jwtUtil.validateToken(refresh);
+        if (!validationResult.isValid()) {
+            if (validationResult.isExpired()) {
+                return new ResponseEntity<>("만료된 토큰입니다 - 다시 로그인해주세요", HttpStatus.NOT_ACCEPTABLE);
+            }
+            return new ResponseEntity<>("유효하지 않은 refresh token입니다", HttpStatus.BAD_REQUEST);
         }
 
-        String userId = jwtUtil.getUserId(refresh);
-        String role = jwtUtil.getRole(refresh);
+        // 토큰 페이로드 추출
+        JWTUtil.TokenPayload payload = jwtUtil.extractPayload(refresh);
 
-        if(!authService.validateRefreshToken(userId, refresh)){
-            return new ResponseEntity<>("refresh token not found or invalid", HttpStatus.UNAUTHORIZED);
+        // Refresh 토큰 타입 확인
+        if (!SecurityConstants.REFRESH_TOKEN.equals(payload.getCategory())) {
+            return new ResponseEntity<>("유효하지 않은 refresh token입니다", HttpStatus.BAD_REQUEST);
         }
 
-        //새 토큰 발급
-        String newAccess = jwtUtil.createJwt("access", userId, role, 60000L); //600000 - 10분
-        String newRefresh = jwtUtil.createJwt("refresh", userId, role, 86400000L);
+        // Redis에서 Refresh 토큰 검증
+        if (!authService.validateRefreshToken(payload.getUserId(), refresh)) {
+            return new ResponseEntity<>("저장된 refresh token을 찾을 수 없거나 유효하지 않습니다", HttpStatus.UNAUTHORIZED);
+        }
+
+
+        // 새 토큰 발급
+        String newAccess = jwtUtil.createToken(
+                new JWTUtil.TokenPayload(payload.getUserId(), payload.getRole(), SecurityConstants.ACCESS_TOKEN),
+                SecurityConstants.ACCESS_TOKEN_VALIDITY
+        );
+
+        String newRefresh = jwtUtil.createToken(
+                new JWTUtil.TokenPayload(payload.getUserId(), payload.getRole(), SecurityConstants.REFRESH_TOKEN),
+                SecurityConstants.REFRESH_TOKEN_VALIDITY
+        );
+
 
         //레디스에 refresh 토큰 저장
-        authService.saveRefreshToken(userId, newRefresh, 86400000L);
+        authService.saveRefreshToken(payload.getUserId(), newRefresh, SecurityConstants.REFRESH_TOKEN_VALIDITY);
+
 
         //response
-        response.setHeader("Authorization", newAccess);
-        response.addCookie(createCookie("refresh", newRefresh));
+        response.setHeader(SecurityConstants.AUTHORIZATION_HEADER, newAccess);
+        response.addCookie(createCookie(SecurityConstants.REFRESH_COOKIE_NAME, newRefresh));
+
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    private String extractRefreshToken(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (SecurityConstants.REFRESH_COOKIE_NAME.equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
+    }
+
+
     private Cookie createCookie(String key, String value) {
 
         Cookie cookie = new Cookie(key, value);
-        cookie.setMaxAge(24*60*60);
-        //cookie.setSecure(true);
+        cookie.setMaxAge(SecurityConstants.COOKIE_MAX_AGE);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
-
         cookie.setAttribute("SameSite", "None");
         cookie.setSecure(true);
-
         return cookie;
+
     }
 }

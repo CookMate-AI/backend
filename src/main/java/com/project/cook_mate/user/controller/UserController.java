@@ -1,6 +1,7 @@
 package com.project.cook_mate.user.controller;
 
 import com.project.cook_mate.jwt.JWTUtil;
+import com.project.cook_mate.jwt.TokenValidationResult;
 import com.project.cook_mate.user.dto.CustomUserDetails;
 import com.project.cook_mate.user.dto.UserDto;
 import com.project.cook_mate.user.dto.UserResponseDto;
@@ -236,19 +237,23 @@ public class UserController {
         String id = customUserDetails.getUsername();
         logHelper.processUserRequest("로그아웃", id);
 
-        String accessToken = jwtUtil.extractToken(request);
-        if (accessToken == null) {
+        Optional<String> accessToken = jwtUtil.extractTokenFromRequest(request);
+        if (accessToken.isEmpty()) {
             logHelper.requestFail("로그아웃 실패 - accessToken X", id);
-            return ResponseEntity.badRequest().body("{\"error\": \"토큰이 필요합니다.\"}");
+            return ResponseEntity.badRequest().body(Map.of("error", "토큰이 필요합니다."));
         }
 
-        //refresh 삭제
+        // refresh 토큰 삭제
         Cookie cookie = authService.deleteRefreshToken(id);
         response.addCookie(cookie);
 
-        // 토큰 남은 시간 확인 후 Redis에 추가
-        long expiration = jwtUtil.getExpirationTime(accessToken);
-        authService.addToBlacklist(accessToken, expiration);
+        // 액세스 토큰 블랙리스트 처리
+        TokenValidationResult validationResult = jwtUtil.validateToken(accessToken.get());
+        if (validationResult.isValid()) {
+            long expiration = jwtUtil.getExpirationTime(accessToken.get());
+            authService.addToBlacklist(accessToken.get(), expiration);
+        }
+
 
         logHelper.requestSuccess("로그아웃 성공", id);
 

@@ -1,5 +1,6 @@
 package com.project.cook_mate.jwt;
 
+import com.project.cook_mate.jwt.constant.SecurityConstants;
 import com.project.cook_mate.user.dto.CustomUserDetails;
 import com.project.cook_mate.user.log.LogHelper;
 import com.project.cook_mate.user.model.User;
@@ -47,14 +48,15 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         Optional<User> user = userRepository.findByUserIdAndSecession(username, 0);
 
-        if(user.isPresent()){
-        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(username, password, null);
-
-        return authenticationManager.authenticate(authToken);
-        }else{
-            System.out.println("탈퇴하거나 없는 회원");
+        if (user.isEmpty()) {
+//            log.warn("Login attempt failed: User not found or withdrawn - {}", username);
             throw new UsernameNotFoundException("User not found");
         }
+
+        UsernamePasswordAuthenticationToken authToken =
+                new UsernamePasswordAuthenticationToken(username, password, null);
+        return authenticationManager.authenticate(authToken);
+
 
     }
 
@@ -65,41 +67,37 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
 
         String userId = customUserDetails.getUsername();
-        String nickname = customUserDetails.getNickName();
-        String encodedNickname = Base64.getEncoder().encodeToString(nickname.getBytes(StandardCharsets.UTF_8));
+        String role = authentication.getAuthorities().iterator().next().getAuthority();
 
-        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-        Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
-        GrantedAuthority auth = iterator.next();
-        String role = auth.getAuthority();
+        // 닉네임 인코딩
+        String encodedNickname = Base64.getEncoder().encodeToString(
+                customUserDetails.getNickName().getBytes(StandardCharsets.UTF_8)
+        );
 
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                System.out.println("쿠키 발견: " + cookie.getName() + ", 경로: " + cookie.getPath());
-                if ("refresh".equals(cookie.getName())) {
-                    Cookie expiredCookie = new Cookie(cookie.getName(), null);
-                    expiredCookie.setMaxAge(0);
-                    expiredCookie.setPath(cookie.getPath());
-                    response.addCookie(expiredCookie);
-                }
-            }
-        }
+
+        clearExistingRefreshToken(request, response);
+
 
         //토큰 생성
-        String access = jwtUtil.createJwt("access", userId, role, 60000L); // 앞에 3 빼줘야 함 지금은 테스트 용
-        String refresh = jwtUtil.createJwt("refresh", userId, role, 86400000L);
+        JWTUtil.TokenPayload accessPayload = new JWTUtil.TokenPayload(
+                userId, role, SecurityConstants.ACCESS_TOKEN
+        );
+        JWTUtil.TokenPayload refreshPayload = new JWTUtil.TokenPayload(
+                userId, role, SecurityConstants.REFRESH_TOKEN
+        );
 
-        authService.saveRefreshToken(userId, refresh, 86400000L);
+        String accessToken = jwtUtil.createToken(accessPayload, SecurityConstants.ACCESS_TOKEN_VALIDITY);
+        String refreshToken = jwtUtil.createToken(refreshPayload, SecurityConstants.REFRESH_TOKEN_VALIDITY);
 
-        response.setHeader("Authorization", access);
+
+        authService.saveRefreshToken(userId, refreshToken, SecurityConstants.REFRESH_TOKEN_VALIDITY);
+
+        // 응답 설정
+        response.setHeader(SecurityConstants.AUTHORIZATION_HEADER, accessToken);
         response.setHeader("User-Nickname", encodedNickname);
-        response.addCookie(createCookie("refresh",refresh));
+        response.addCookie(createCookie(SecurityConstants.REFRESH_COOKIE_NAME, refreshToken));
         response.setStatus(HttpStatus.OK.value());
 
-
-//        response.setHeader("Access-Control-Allow-Credentials", "true");
-//        response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
     }
 
     //로그인 실패시 실행하는 메소드
@@ -121,18 +119,31 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     }
 
+    private void clearExistingRefreshToken(HttpServletRequest request, HttpServletResponse response) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (SecurityConstants.REFRESH_COOKIE_NAME.equals(cookie.getName())) {
+                    Cookie expiredCookie = new Cookie(cookie.getName(), null);
+                    expiredCookie.setMaxAge(0);
+                    expiredCookie.setPath(cookie.getPath());
+                    response.addCookie(expiredCookie);
+                }
+            }
+        }
+    }
+
+
     private Cookie createCookie(String key, String value) {
 
         Cookie cookie = new Cookie(key, value);
-        cookie.setMaxAge(24*60*60);
-        //cookie.setSecure(true); //Https 적용시
-        cookie.setPath("/"); //쿠키가 적용될 범위 설정 시
-        cookie.setHttpOnly(true); //js로 해당 쿠키 접근 못하게 설정
-
+        cookie.setMaxAge(SecurityConstants.COOKIE_MAX_AGE);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
         cookie.setAttribute("SameSite", "None");
         cookie.setSecure(true);
-
         return cookie;
+
     }
 
 }
