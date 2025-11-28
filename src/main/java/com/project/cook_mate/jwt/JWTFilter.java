@@ -12,18 +12,25 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 //jwt 검증
 @RequiredArgsConstructor
 public class JWTFilter extends OncePerRequestFilter {
     private final JWTUtil jwtUtil;
     private final AuthService authService;
+
+    private final List<AntPathRequestMatcher> publicMatchers =
+            Arrays.stream(SecurityConstants.Endpoints.PUBLIC)
+                    .map(AntPathRequestMatcher::new)
+                    .toList();
 
 
     @Override
@@ -46,8 +53,14 @@ public class JWTFilter extends OncePerRequestFilter {
 
     //URL 검증
     private boolean isPublicUrl(HttpServletRequest request) {
-        return Arrays.asList(SecurityConstants.PUBLIC_URLS)
-                .contains(request.getRequestURI());
+        for (AntPathRequestMatcher matcher : publicMatchers) {
+            // 현재 요청 (request)이 등록된 matcher 패턴과 일치하는지 확인
+            if (matcher.matches(request)) {
+                return true;
+            }
+        }
+        return false;
+
     }
 
     //토큰 인증 과정
@@ -82,7 +95,7 @@ public class JWTFilter extends OncePerRequestFilter {
 
         JWTUtil.TokenPayload payload = jwtUtil.extractPayload(token);
 
-        if (!SecurityConstants.ACCESS_TOKEN.equals(payload.getCategory())) {
+        if (!SecurityConstants.Token.ACCESS.equals(payload.getCategory())) {
             handleInvalidTokenType(response);
             return;
         }
@@ -96,12 +109,16 @@ public class JWTFilter extends OncePerRequestFilter {
         user.setUserId(payload.getUserId());
         user.setRole(payload.getRole());
 
+        System.out.println(payload.getRole());
+
         CustomUserDetails customUserDetails = new CustomUserDetails(user);
         Authentication authToken = new UsernamePasswordAuthenticationToken(
                 customUserDetails,
                 null,
                 customUserDetails.getAuthorities()
         );
+
+        System.out.println(customUserDetails.getAuthorities());
 
         SecurityContextHolder.getContext().setAuthentication(authToken);
     }

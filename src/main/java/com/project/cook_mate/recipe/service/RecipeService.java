@@ -41,13 +41,13 @@ public class RecipeService {
 
     private final LogHelper2 logHelper;
 
-    public Mono<List<String>> recommendMenu(String ingredients, int count) throws Exception{
+    public List<String> recommendMenu(String ingredients, int count) throws Exception{
         return aiService.recommendMenu(ingredients,count);
 
     }
 
     @Transactional(readOnly = true)
-    public Mono<ResponseEntity<Map<String, Object>>> getRecipe(String ingredients, String food, String userId){
+    public ResponseEntity<Map<String, Object>> getRecipe(String ingredients, String food, String userId){
         logHelper.processRecipeRequest("레시피 받기", userId);
 
         Optional<RecipeResponseDto> recipe = recipeRepository.findByFoodNameAndUserId(food, userId);
@@ -57,26 +57,26 @@ public class RecipeService {
             int category = recipeResponseDto.getCategory();
             String content = recipeResponseDto.getContent();
             logHelper.requestSuccess("레시피 받기 성공 - DB에 존재", userId);
-            return Mono.just(ResponseEntity.ok(Map.of("category", category, "recipe", content, "isSaved", "O")));
+            return ResponseEntity.ok(Map.of("category", category, "recipe", content, "isSaved", "O"));
         }
         else {
             try {
-                return aiService.getRecipe(ingredients, food)
-                        .map(result -> {
-                            if (result.length < 2) {
-                                logHelper.requestFail("레시피 받기 실패 - AI 결과없음", userId);
-                                return ResponseEntity.badRequest().body(Map.of("error", "잘못된 응답 형식"));
-                            }
-                            int category;
-                            try {
-                                category = Integer.parseInt(result[0].trim());
-                            } catch (NumberFormatException e) {
-                                logHelper.handleException(e);
-                                return ResponseEntity.badRequest().body(Map.of("error", "카테고리 변환 실패"));
-                            }
-                            logHelper.requestSuccess("레시피 받기 성공 - AI 정상 응답", userId);
-                            return ResponseEntity.ok(Map.of("category", category, "recipe", result[1], "isSaved", "X"));
-                        });
+                String[] result = aiService.getRecipe(ingredients, food);
+                if (result == null || result.length < 2) {
+                    logHelper.requestFail("레시피 받기 실패 - AI 결과없음", userId);
+                    return ResponseEntity.badRequest().body(Map.of("error", "잘못된 응답 형식"));
+                }
+                int category;
+                try {
+                    category = Integer.parseInt(result[0].trim());
+                } catch (NumberFormatException e) {
+                    logHelper.handleException(e);
+                    return ResponseEntity.badRequest().body(Map.of("error", "카테고리 변환 실패"));
+                }
+                logHelper.requestSuccess("레시피 받기 성공 - AI 정상 응답", userId);
+
+                return ResponseEntity.ok(Map.of("category", category, "recipe", result[1], "isSaved", "X"));
+
             } catch (Exception e) {
                 logHelper.handleException(e);
                 throw new RuntimeException(e);

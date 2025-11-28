@@ -32,7 +32,7 @@ public class AIService {
 
     private final LogHelper2 logHelper;
 
-    public Mono<List<String>> recommendMenu(String ingredients, int count) throws Exception{
+    public List<String> recommendMenu(String ingredients, int count) throws Exception{
 
         String id = getId();
         logHelper.processRecipeRequest("메뉴 추천 기능", id);
@@ -98,10 +98,10 @@ public class AIService {
                     } catch (ClassCastException e) {
                         return List.of("응답 형식 오류");
                     }
-                });
+                }).block();
     }
 
-    public Mono<String[]> getRecipe(String ingredients, String food) throws Exception{
+    public String[] getRecipe(String ingredients, String food) throws Exception{
 
         WebClient webClient = webClientBuilder.baseUrl(apiUrl).build();
 
@@ -156,7 +156,7 @@ public class AIService {
                     } catch (ClassCastException e) {
                         return new String[]{"추천없음"};
                     }
-                });
+                }).block();
     }
 
     private String getId(){

@@ -17,14 +17,11 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.Optional;
 
 //로그인 확인 담당
@@ -80,22 +77,22 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         //토큰 생성
         JWTUtil.TokenPayload accessPayload = new JWTUtil.TokenPayload(
-                userId, role, SecurityConstants.ACCESS_TOKEN
+                userId, role, SecurityConstants.Token.ACCESS
         );
         JWTUtil.TokenPayload refreshPayload = new JWTUtil.TokenPayload(
-                userId, role, SecurityConstants.REFRESH_TOKEN
+                userId, role, SecurityConstants.Token.REFRESH
         );
 
-        String accessToken = jwtUtil.createToken(accessPayload, SecurityConstants.ACCESS_TOKEN_VALIDITY);
-        String refreshToken = jwtUtil.createToken(refreshPayload, SecurityConstants.REFRESH_TOKEN_VALIDITY);
+        String accessToken = jwtUtil.createToken(accessPayload, SecurityConstants.Token.ACCESS_VALIDITY);
+        String refreshToken = jwtUtil.createToken(refreshPayload, SecurityConstants.Token.REFRESH_VALIDITY);
 
 
-        authService.saveRefreshToken(userId, refreshToken, SecurityConstants.REFRESH_TOKEN_VALIDITY);
+        authService.saveRefreshToken(userId, refreshToken, SecurityConstants.Token.REFRESH_VALIDITY);
 
         // 응답 설정
-        response.setHeader(SecurityConstants.AUTHORIZATION_HEADER, accessToken);
+        response.setHeader(SecurityConstants.Token.AUTHORIZATION_HEADER, accessToken);
         response.setHeader("User-Nickname", encodedNickname);
-        response.addCookie(createCookie(SecurityConstants.REFRESH_COOKIE_NAME, refreshToken));
+        response.addCookie(createCookie(SecurityConstants.Cookie.REFRESH_NAME, refreshToken));
         response.setStatus(HttpStatus.OK.value());
 
     }
@@ -123,7 +120,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
-                if (SecurityConstants.REFRESH_COOKIE_NAME.equals(cookie.getName())) {
+                if (SecurityConstants.Cookie.REFRESH_NAME.equals(cookie.getName())) {
                     Cookie expiredCookie = new Cookie(cookie.getName(), null);
                     expiredCookie.setMaxAge(0);
                     expiredCookie.setPath(cookie.getPath());
@@ -137,7 +134,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private Cookie createCookie(String key, String value) {
 
         Cookie cookie = new Cookie(key, value);
-        cookie.setMaxAge(SecurityConstants.COOKIE_MAX_AGE);
+        cookie.setMaxAge(SecurityConstants.Cookie.MAX_AGE);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
         cookie.setAttribute("SameSite", "None");

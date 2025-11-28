@@ -27,12 +27,12 @@ public class RecipeController {
     private final LogHelper2 logHelper2;
 
     @PostMapping("/menu")
-    public Mono<ResponseEntity<List<String>>> recommendMenu(@RequestBody Map<String, Object> requestData){
+    public ResponseEntity<List<String>> recommendMenu(@RequestBody Map<String, Object> requestData){
         String ingredients = (String) requestData.get("ingredients");
 
         try {
-            return recipeService.recommendMenu(ingredients, 2)
-                    .map(menuList -> ResponseEntity.ok(menuList));
+            List<String> menuList = recipeService.recommendMenu(ingredients, 2);
+            return ResponseEntity.ok(menuList);
         } catch (Exception e) {
             System.out.println(e);
             throw new RuntimeException(e);
@@ -40,7 +40,7 @@ public class RecipeController {
     }
 
     @PostMapping("/recommend")
-    public Mono<ResponseEntity<Map<String, Object>>> openRecipe(@RequestBody Map<String, Object> requestData,
+    public ResponseEntity<Map<String, Object>> openRecipe(@RequestBody Map<String, Object> requestData,
                                                                 @AuthenticationPrincipal CustomUserDetails customUserDetails){
         String food = (String) requestData.get("food");
         String ingredients = (String) requestData.get("ingredients");

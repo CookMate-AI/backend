@@ -78,7 +78,7 @@ public class JWTUtil {
     }
 
     public Optional<String> extractTokenFromRequest(HttpServletRequest request) {
-        return Optional.ofNullable(request.getHeader(SecurityConstants.AUTHORIZATION_HEADER));
+        return Optional.ofNullable(request.getHeader(SecurityConstants.Token.AUTHORIZATION_HEADER));
     }
 
     public TokenValidationResult validateToken(String token) {

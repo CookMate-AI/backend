@@ -49,6 +49,7 @@ public class UserController {
 
     @PostMapping("/check-Email/send-Email")
     public ResponseEntity<?> certificationNumber(@RequestBody Map<String, Object> requestData){
+        System.out.println("check");
         String email = (String) requestData.get("email");
         boolean isExist = userCheckService.duplicationEmail(email);
 

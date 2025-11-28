@@ -5,7 +5,6 @@ import com.project.cook_mate.jwt.JWTUtil;
 import com.project.cook_mate.jwt.TokenValidationResult;
 import com.project.cook_mate.jwt.constant.SecurityConstants;
 import com.project.cook_mate.user.service.AuthService;
-import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -44,7 +43,7 @@ public class ReissueController {
         JWTUtil.TokenPayload payload = jwtUtil.extractPayload(refresh);
 
         // Refresh 토큰 타입 확인
-        if (!SecurityConstants.REFRESH_TOKEN.equals(payload.getCategory())) {
+        if (!SecurityConstants.Token.REFRESH.equals(payload.getCategory())) {
             return new ResponseEntity<>("유효하지 않은 refresh token입니다", HttpStatus.BAD_REQUEST);
         }
 
@@ -56,23 +55,23 @@ public class ReissueController {
 
         // 새 토큰 발급
         String newAccess = jwtUtil.createToken(
-                new JWTUtil.TokenPayload(payload.getUserId(), payload.getRole(), SecurityConstants.ACCESS_TOKEN),
-                SecurityConstants.ACCESS_TOKEN_VALIDITY
+                new JWTUtil.TokenPayload(payload.getUserId(), payload.getRole(), SecurityConstants.Token.ACCESS),
+                SecurityConstants.Token.ACCESS_VALIDITY
         );
 
         String newRefresh = jwtUtil.createToken(
-                new JWTUtil.TokenPayload(payload.getUserId(), payload.getRole(), SecurityConstants.REFRESH_TOKEN),
-                SecurityConstants.REFRESH_TOKEN_VALIDITY
+                new JWTUtil.TokenPayload(payload.getUserId(), payload.getRole(), SecurityConstants.Token.REFRESH),
+                SecurityConstants.Token.REFRESH_VALIDITY
         );
 
 
         //레디스에 refresh 토큰 저장
-        authService.saveRefreshToken(payload.getUserId(), newRefresh, SecurityConstants.REFRESH_TOKEN_VALIDITY);
+        authService.saveRefreshToken(payload.getUserId(), newRefresh, SecurityConstants.Token.REFRESH_VALIDITY);
 
 
         //response
-        response.setHeader(SecurityConstants.AUTHORIZATION_HEADER, newAccess);
-        response.addCookie(createCookie(SecurityConstants.REFRESH_COOKIE_NAME, newRefresh));
+        response.setHeader(SecurityConstants.Token.AUTHORIZATION_HEADER, newAccess);
+        response.addCookie(createCookie(SecurityConstants.Cookie.REFRESH_NAME, newRefresh));
 
 
         return new ResponseEntity<>(HttpStatus.OK);
@@ -82,7 +81,7 @@ public class ReissueController {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
-                if (SecurityConstants.REFRESH_COOKIE_NAME.equals(cookie.getName())) {
+                if (SecurityConstants.Cookie.REFRESH_NAME.equals(cookie.getName())) {
                     return cookie.getValue();
                 }
             }
@@ -94,7 +93,7 @@ public class ReissueController {
     private Cookie createCookie(String key, String value) {
 
         Cookie cookie = new Cookie(key, value);
-        cookie.setMaxAge(SecurityConstants.COOKIE_MAX_AGE);
+        cookie.setMaxAge(SecurityConstants.Cookie.MAX_AGE);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
         cookie.setAttribute("SameSite", "None");

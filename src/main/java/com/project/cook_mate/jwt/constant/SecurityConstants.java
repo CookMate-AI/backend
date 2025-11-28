@@ -7,29 +7,40 @@ public final class SecurityConstants {
     }
 
     // JWT 관련 상수
-    public static final String ACCESS_TOKEN = "access";
-    public static final String REFRESH_TOKEN = "refresh";
-    public static final String AUTHORIZATION_HEADER = "Authorization";
+    public static final class Token {
+        public static final String ACCESS = "access";
+        public static final String REFRESH = "refresh";
+        public static final String AUTHORIZATION_HEADER = "Authorization";
 
-    // 토큰 유효 시간 (ms)
-    public static final long ACCESS_TOKEN_VALIDITY = 360000L; // 600000L = 10분
-    public static final long REFRESH_TOKEN_VALIDITY = 86400000L;
+        public static final long ACCESS_VALIDITY = 360000L;
+        public static final long REFRESH_VALIDITY = 86400000L;
+    }
 
     // 쿠키 관련 상수
-    public static final String REFRESH_COOKIE_NAME = "refresh";
-    public static final int COOKIE_MAX_AGE = 24 * 60 * 60;
+    public static final class Cookie{
+        public static final String REFRESH_NAME = "refresh";
+        public static final int MAX_AGE = 24 * 60 * 60;
+        public static final String SAME_SITE = "None";
+    }
+//    public static final String REFRESH_NAME = "refresh";
+//    public static final int MAX_AGE = 24 * 60 * 60;
 
     // 공개 URL 패턴
-    public static final String[] PUBLIC_URLS = {
-            "/users/signup",
-            "/users/check-id",
-            "/users/check-Email/send-Email",
-            "/users/check-Email/certification",
-            "/users/check-nickname",
-            "/users/signin",
-            "/users/find-id/send-Email",
-            "/users/find-id/certification",
-            "/users/find-pw",
-            "/reissue"
-    };
+    public static final class Endpoints {
+        public static final String[] PUBLIC = {
+                "/users/signup",
+                "/users/check-id",
+                "/users/check-Email/*",
+                "/users/check-nickname",
+                "/users/signin",
+                "/users/find-id/*",
+                "/users/find-pw",
+                "/reissue"
+        };
+
+        public static final String[] SWAGGER = {
+                "/swagger-ui/**",
+                "/v3/api-docs/**"
+        };
+    }
 }
